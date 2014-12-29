@@ -8,7 +8,7 @@
 #define a_64 0.709
 
 int lastBits(int n, int val);
-float hyperLL(void);
+float hyperLL_32bits(void);
 int main(int argc, const char **argv);
 
 

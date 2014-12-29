@@ -1,13 +1,13 @@
 CC=gcc
 CFLAGS=-c -Wall -O3
 LDFLAGS=
-SOURCES=murmur3.c hypLL.c
+SOURCES=murmur3.c hypLL_noThread.c
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=hyperLL
+BINARY=hyperLL
 
-all: $(EXECUTABLE)
+all: $(BINARY)
 
-$(EXECUTABLE): $(OBJECTS)
+$(BINARY): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .c.o: 
@@ -15,4 +15,4 @@ $(EXECUTABLE): $(OBJECTS)
 
 clean :
 	rm -f *.o 
-	rm -f $(EXECUTABLE)
+	rm -f $(BINARY)
