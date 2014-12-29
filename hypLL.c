@@ -8,7 +8,7 @@
 
 #define BUF_SIZE 1024
 #define HASH_SEED 0
-#define P 12 // precision argument
+#define P 14 // precision argument
 #define MAX_THREAD 200
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;

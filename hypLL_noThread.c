@@ -6,7 +6,7 @@
 
 #define BUF_SIZE 4096
 #define HASH_SEED 0
-#define P 12 // precision argument
+#define P 14 // precision argument
 
 
 int lastBits(int n, int val){
