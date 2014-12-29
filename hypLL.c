@@ -30,7 +30,7 @@ float hyperLL(void){
     }
 
     int *M = NULL;
-    M = (int*) calloc(m*2,sizeof(uint32_t)); 
+    M = (int*) calloc(m*2,sizeof(int)); 
     if (M == NULL) {
         perror("calloc");
         exit(EXIT_FAILURE);
