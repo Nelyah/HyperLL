@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "murmur3.h"
+#include "hypLL.h"
 
 #define BUF_SIZE 4096
 #define HASH_SEED 0
@@ -24,7 +25,21 @@ float hyperLL_32bits(void){
     int m = pow(2,P); // m : m = 2**p
     uint32_t hashVal[4]; // Only hashVal[0] will be used for a 32bit return value
     uint32_t idx, w;
-    double a_m = 0.7213/(1+0.079/m); // for m >= 128 ??
+    double a_m;
+    switch (P){
+        case 4:
+            a_m = a_16;
+            break;
+        case 5:
+            a_m = a_32;
+            break;
+        case 6:
+            a_m = a_64;
+            break;
+        default:
+            a_m = a_128(m);
+    
+    }
 
 
     buffer = (char*) malloc(BUF_SIZE*sizeof(char));
