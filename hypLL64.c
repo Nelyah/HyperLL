@@ -7,11 +7,8 @@
 #include <time.h>
 #include <inttypes.h>
 
-#define BUF_SIZE 4096
-#define HASH_SEED 0
 #define P 14 // precision argument
 
-char *buffer = NULL;
 uint64_t *M = NULL;
 int m;
 double a_m;
@@ -22,16 +19,10 @@ void init(){
         perror("calloc");
         exit(EXIT_FAILURE);
     }
-    buffer = malloc(BUF_SIZE*(sizeof(char)));
-    if (buffer == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
 }
 
 void freeAll(){
     free(M);
-    free(buffer);
 }
 
 
@@ -152,7 +143,6 @@ float count(){
 
 
 float hyperLL_64bits(void){
-//    uint64_t hashVal[4]; // Only hashVal[0] will be used for a 64bit return value
     m = pow(2,P); // m : m = 2**p
     switch (P){
         case 4:
@@ -168,10 +158,6 @@ float hyperLL_64bits(void){
             a_m = a_128(m);
     }
 
-/*    while(scanf("%s\n",buffer) != EOF){ // reads from standard input
-        MurmurHash3_x64_128(buffer, strlen(buffer), HASH_SEED, hashVal);
-        addItem(hashVal[0]);
-    }*/
     
 // Computation
     

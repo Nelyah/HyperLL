@@ -1,4 +1,3 @@
-#include "murmur3.h"
 
 #ifndef HYP_LOG_LOG
 #define HYP_LOG_LOG
