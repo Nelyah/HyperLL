@@ -12,6 +12,7 @@ uint64_t lastBits(int n, uint64_t val);
 float hyperLL_64bits(void);
 void addItem(uint64_t hashVal);
 void init(void);
+void reset(void);
 void freeAll(void);
 float count(void);
 float count_raw(void);

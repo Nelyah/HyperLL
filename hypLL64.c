@@ -12,13 +12,19 @@
 uint64_t *M = NULL;
 int m;
 double a_m;
+int m_size;
 
 void init(){
-    M = calloc(pow(2,P),sizeof(uint64_t));
+  m_size = pow(2,P);
+    M = calloc(m_size,sizeof(uint64_t));
     if (M == NULL) {
         perror("calloc");
         exit(EXIT_FAILURE);
     }
+}
+
+void reset(){
+  memset(M, 0, m_size);
 }
 
 void freeAll(){
@@ -78,7 +84,7 @@ float count_file(char* filename){ // Uses file to predict corrected estimation
             nextMean = mean;
             nextIsBest = 0;
         }
-        if (fabs(rawEst-mean) < fabs(rawEst-bestMean)) {
+        if (fabsf(rawEst-mean) < fabsf(rawEst-bestMean)) {
             bestMean = mean;
             prevMean = tmpPrev;
             nextIsBest = 1;

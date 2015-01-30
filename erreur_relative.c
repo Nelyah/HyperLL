@@ -11,7 +11,7 @@
 #define BUF_SIZE 4096
 #define HASH_SEED 0
 #define P 14 // precision argument
-
+#define HASHED_VALUES 5000000
 
 
 int main(int argc, const char **argv) {
@@ -29,23 +29,26 @@ int main(int argc, const char **argv) {
     srand(time(NULL));
 
     FILE* f = fopen("plot.txt","w");
-    valTab = malloc(2*pow(10,9)*sizeof(uint64_t));
+    valTab = malloc(HASHED_VALUES*sizeof(uint64_t));
+    if (valTab == NULL) {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
     fileRead = malloc(500*sizeof(char));
     tabEstim = malloc((nbExp*(100000/step)+1)*sizeof(float));
     init();
-    strcpy(fileRead,"plot_raw_1000.txt");
+    strcpy(fileRead,"plot_1000.txt");
 
-printf("coucou\n");
-    for (i = 0; i < 50000000; i++) {
-        MurmurHash3_x64_128(&i, sizeof(int), HASH_SEED, hashVal);
-        valTab[cpt] = hashVal[0];
-        cpt++;
+    //filling the array of hashed value
+    for (i = 0; i < HASHED_VALUES; i++) {
+     MurmurHash3_x64_128(&i, sizeof(int), HASH_SEED, hashVal);
+     valTab[cpt] =hashVal[0] ;
+     cpt++;
     }
     
-    printf("coucou\n");
     start = clock();
     for (i = 0; i < nbExp; i++) {
-        idx = rand() % (50000000 - 100000);
+        idx = rand() % (HASHED_VALUES - 100000);
         for (j = 0; j < 100000; j+=step) {
             if(j!=0){
                 for (k = idx; k < (idx+step); k++) {
@@ -53,13 +56,13 @@ printf("coucou\n");
                 }
             }
             hyperLL_64bits();
-            estim = count_file(fileRead);
+            estim = count_raw();
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }
-        freeAll();
-        init();
-        printf("i : %d  (estim : %f)\n",i,estim);
+        reset();
+
+	printf("%d\n",i);
     }
     printf("addItem done.\n");
 
@@ -69,18 +72,19 @@ printf("coucou\n");
         quickSort(tabEstim, i, i+(nbExp-1));
     }
 
-    float sum = 0, mean, median, pct01, pct99;
+    float sum = 0, mean;
     int cardCur = 0;
+    float relative;
     for (i = 0; i < 100000; i+=step) {
         sum = 0;
         for (j = 0; j < nbExp; j++) {
             sum += tabEstim[j+(i/step)*nbExp];
         }
         mean = sum/nbExp;
-        pct01 = tabEstim[(int)((i/step)*nbExp+0.01*nbExp)];
-        pct99 = tabEstim[(int)((i/step)*nbExp+0.99*nbExp)];
-        median = tabEstim[(int)((i/step)*nbExp+0.5*nbExp)];
-        fprintf(f,"%d %f %f %f %f\n",cardCur, mean, median, pct01, pct99);
+        if (i != 0) {
+            relative = fabsf((mean-cardCur)/cardCur);
+            fprintf(f,"%d %f\n",cardCur, relative);
+        }
         cardCur += step;
     }
 
