@@ -28,7 +28,7 @@ int main(int argc, const char **argv) {
     char* fileRead = NULL;
     srand(time(NULL));
 
-    FILE* f = fopen("plot.txt","w");
+    FILE* f = fopen("plot_file_normal.txt","w");
     valTab = malloc(HASHED_VALUES*sizeof(uint64_t));
     if (valTab == NULL) {
         perror("calloc");
@@ -56,7 +56,7 @@ int main(int argc, const char **argv) {
                 }
             }
             hyperLL_64bits();
-            estim = count_raw();
+            estim = count();
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }

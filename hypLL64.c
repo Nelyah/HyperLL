@@ -75,23 +75,28 @@ float count_file(char* filename){ // Uses file to predict corrected estimation
     float card, estimCard, mean, median, pct01, pct99;
     float prevMean=0, nextMean=0, bestMean=0;
     float tmpPrev;
-    int nextIsBest = 0;
+    int nextIsBest = 0, prevCard = 0, nextCard = 0, prevCardTmp;
     fscanf(f,"%f %f %f %f %f %f",&card,&estimCard,&mean,&median,&pct01,&pct99);
     bestMean = mean;
     tmpPrev = mean;
     while(fscanf(f,"%f %f %f %f %f %f",&card,&estimCard,&mean,&median,&pct01,&pct99) != EOF) {
         if (nextIsBest == 1) {
             nextMean = mean;
+            nextCard = card;
             nextIsBest = 0;
         }
         if (fabsf(rawEst-mean) < fabsf(rawEst-bestMean)) {
             bestMean = mean;
             prevMean = tmpPrev;
+            prevCard = prevCardTmp;
             nextIsBest = 1;
         }
         tmpPrev = mean;
+        prevCardTmp = card;
     }
     estim = (nextMean+prevMean)/2;
+    estim = ((rawEst-prevMean)/(nextMean-prevMean))*prevCard;
+    estim += ((nextMean-rawEst)/(nextMean-prevMean))*nextCard;
 
     fclose(f);
     return estim;

@@ -1,0 +1,12 @@
+class VarIntReader {
+    public :
+        VarIntReader(const std:: string & data);
+        bool GetNextInt32(int*value);
+};
+
+DeltaVarIntWriter{
+    public:
+        void Append Int32(int value);
+        const string & data() const;
+
+}
