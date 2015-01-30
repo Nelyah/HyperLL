@@ -17,6 +17,7 @@ void freeAll(void);
 float count(void);
 float count_raw(void);
 float count_file(char* filename);
+void loadFile(char* filename);
 
 
 
