@@ -152,7 +152,7 @@ float count(){
 
 
 float hyperLL_64bits(void){
-    uint64_t hashVal[4]; // Only hashVal[0] will be used for a 64bit return value
+//    uint64_t hashVal[4]; // Only hashVal[0] will be used for a 64bit return value
     m = pow(2,P); // m : m = 2**p
     switch (P){
         case 4:
@@ -168,10 +168,10 @@ float hyperLL_64bits(void){
             a_m = a_128(m);
     }
 
-    while(scanf("%s\n",buffer) != EOF){ // reads from standard input
+/*    while(scanf("%s\n",buffer) != EOF){ // reads from standard input
         MurmurHash3_x64_128(buffer, strlen(buffer), HASH_SEED, hashVal);
         addItem(hashVal[0]);
-    }
+    }*/
     
 // Computation
     
@@ -181,10 +181,4 @@ float hyperLL_64bits(void){
     return 0;
 }
 
-int main(int argc, const char **argv) {
-    init();
-    hyperLL_64bits();
-    float estim = count();
-    printf("%f\n",estim);
-    return 0;
-}
+

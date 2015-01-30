@@ -28,7 +28,7 @@ int main(int argc, const char **argv) {
     char* fileRead = NULL;
     srand(time(NULL));
 
-    FILE* f = fopen("plot_acc_1000.txt","w");
+    FILE* f = fopen("plot.txt","w");
     valTab = malloc(2*pow(10,9)*sizeof(uint64_t));
     fileRead = malloc(500*sizeof(char));
     tabEstim = malloc((nbExp*(100000/step)+1)*sizeof(float));
@@ -47,11 +47,13 @@ printf("coucou\n");
     for (i = 0; i < nbExp; i++) {
         idx = rand() % (50000000 - 100000);
         for (j = 0; j < 100000; j+=step) {
-            for (k = idx; k < (idx+step); k++) {
-                addItem(valTab[k]);
+            if(j!=0){
+                for (k = idx; k < (idx+step); k++) {
+                    addItem(valTab[k]);
+                }
             }
             hyperLL_64bits();
-            estim = count();
+            estim = count_raw();
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }
