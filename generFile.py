@@ -2,10 +2,10 @@ import random
 
 # Generates a file with random numbers
 
-f = open("card.txt", "w")
+f = open("card2.txt", "w")
 
-for i in range(0,1000000):
-    a = random.randint(1,15)
+for i in range(0,10000000):
+    a = random.randint(100,999)
     f.write(str(a)+'\n')
 
 

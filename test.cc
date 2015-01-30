@@ -49,8 +49,8 @@ void GenerateUniqueString(int seed, string* out) {
   // Append some random characters.
   srandom(seed);
   const int length = random() % 20;
-  const int alphabet = random() % 26;
-  for (int i = 0; i < length; ++i) out += char('a' + random() % alphabet);
+  const int alphabet = 1 + random() % 26;
+  for (int i = 0; i < length; ++i) *out += char('a' + random() % alphabet);
 }
 
 // Returns the name of the temporary file created.
@@ -143,10 +143,12 @@ vector<double> RunExternalCommandToEstimateLineCardinality(
               tmp_filename.c_str(), command_line.c_str());
       return vector<double>();
     }
+    double x = -1;
     FILE* result_file = fopen(result_file_name.c_str(), "r");
     CHECK(result_file != NULL);
-    double x= -1;
-    if (fscanf(result_file, "%lf", &x) != 1) {
+    const int num_numbers_read = fscanf(result_file, "%lf", &x);
+    CHECK(fclose(result_file) == 0);
+    if (num_numbers_read != 1 || x != x) {
       fprintf(stderr,
               "Your program did not output a readable cardinality estimate on"
               " input '%s'.\nSee your program's output in '%s'. It must be a"
@@ -209,7 +211,7 @@ bool TestExternalCommandToEstimateCardinality(const string& command) {
 	    median, perc5, perc95);
     const double adjusted_relative_error =
 	cardinality == 0 ? (median == 0 ? 0 : 1) :
-	(median - cardinality) * sqrt(estimates.size()) / cardinality;
+	fabs((median - cardinality) * sqrt(estimates.size()) / cardinality);
     if (adjusted_relative_error > 0.5) {
       fprintf(stderr,
 	      "ERROR: your cardinality estimator seems very wrong:"

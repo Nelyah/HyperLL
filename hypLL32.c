@@ -3,53 +3,84 @@
 #include <stdlib.h>
 #include <math.h>
 #include "murmur3.h"
+#include "hypLL.h"
+#include <time.h>
 
 #define BUF_SIZE 4096
 #define HASH_SEED 0
-#define P 12 // precision argument
+#define P 14 // precision argument
 
+char *buffer = NULL;
+int *M = NULL;
+
+void init(){
+    M = calloc(pow(2,P),sizeof(int));
+    if (M == NULL) {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
+    buffer = malloc(BUF_SIZE*(sizeof(char)));
+    if (buffer == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void freeAll(){
+    free(M);
+    free(buffer);
+}
 
 int lastBits(int n, int val){
 // returns the last n bits of val
+// val needs to be unsigned int 32bit
     uint32_t mask;
     mask = (1 << n) - 1;
     uint32_t returnVal = val & mask;
     return returnVal;
 }
 
+void addItem(uint32_t hashVal){
+// Aggregation
+    uint32_t idx, w;
+    int clz=0;
+
+    idx = hashVal >> (32 - P);
+    w = lastBits((32-P), hashVal);
+    w = w << P;
+    clz = __builtin_clz(w)+1;
+    if (M[idx] < clz) 
+        M[idx] = clz;
+       
+}
+
 float hyperLL_32bits(void){
-    char *buffer = NULL;
-    int *M = NULL;
-    int rc, i, clz=0;
+    int i;
     int m = pow(2,P); // m : m = 2**p
     uint32_t hashVal[4]; // Only hashVal[0] will be used for a 32bit return value
-    uint32_t idx, w;
-    double a_m = 0.7213/(1+0.079/m); // for m >= 128 ??
-
-
-    buffer = (char*) malloc(BUF_SIZE*sizeof(char));
-    if (buffer == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
+    double a_m;
+    switch (P){
+        case 4:
+            a_m = a_16;
+            break;
+        case 5:
+            a_m = a_32;
+            break;
+        case 6:
+            a_m = a_64;
+            break;
+        default:
+            a_m = a_128(m);
     }
 
-    M = (int*) calloc(m,sizeof(int)); 
-    if (M == NULL) {
-        perror("calloc");
-        exit(EXIT_FAILURE);
-    }
 
-// Aggregation
+    //init();
 
-    while((rc = scanf("%s\n",buffer)) != EOF){ // reads from standard input
+
+/*    while(scanf("%s\n",buffer) != EOF){ // reads from standard input
         MurmurHash3_x86_32(buffer, strlen(buffer), HASH_SEED, hashVal);
-        idx = hashVal[0] >> (32 - P);
-        w = lastBits((32-P), hashVal[0]);
-        w = w << P;
-        clz = __builtin_clz(w)+1;
-        if (M[idx] < clz) 
-            M[idx] = clz;
-    }
+        addItem(hashVal[0]);
+    }*/
     
 // Computation
 
@@ -78,17 +109,11 @@ float hyperLL_32bits(void){
         estim = -pow(2,32)*log(1 - (rawEst/pow(2,32)));
     }
 
-    free(M);
-    free(buffer);
-    printf("%f",estim);
+    //printf("%f",estim);
     return estim;
 }
 
-
-
-
-int main(int argc, const char **argv) {
+/*int main(int argc, const char **argv) {
     hyperLL_32bits();
-    
     return 0;
-}
+}*/

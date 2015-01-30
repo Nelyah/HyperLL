@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-c -Wall -O3
+CFLAGS=-c -Wall -O3 
 LDFLAGS=
-SOURCES=murmur3.c hypLL_noThread.c
+SOURCES=murmur3.c hypLL64.c  sort.c
 OBJECTS=$(SOURCES:.c=.o)
 BINARY=hyperLL
 
