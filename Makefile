@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-c -Wall -O3 
-LDFLAGS=
+CFLAGS=-c -Wall -O3
+LDFLAGS= -lm
 SOURCES=murmur3.c hypLL64.c  sort.c
 OBJECTS=$(SOURCES:.c=.o)
 BINARY=hyperLL
@@ -8,10 +8,10 @@ BINARY=hyperLL
 all: $(BINARY)
 
 $(BINARY): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) -o $@  $(LDFLAGS)
 
 .c.o: 
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $< -o $@ $(CFLAGS)
 
 clean :
 	rm -f *.o 
