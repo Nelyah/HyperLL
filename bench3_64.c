@@ -22,7 +22,7 @@ int main(int argc, const char **argv) {
     uint64_t hashVal[4];
     int cpt = 0;
     int idx,i,j,k;
-    float estim = 0;
+    double estim = 0;
     clock_t start, end, total;
     uint64_t* valTab = NULL;
     float* tabEstim = NULL;
@@ -54,6 +54,7 @@ int main(int argc, const char **argv) {
                 }
             }
             hyperLL_64bits();
+            estim = 0;
             estim = count_file(fileRead);
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
@@ -69,7 +70,8 @@ int main(int argc, const char **argv) {
       quickSort(tabEstim, i, i+(nbExp-1));
     }
 
-    float sum = 0, mean, median, pct01, pct99;
+    float  median, pct01, pct99;
+    double mean,sum =0;
     int cardCur = 0;
     for (i = 0; i < MAX_CARD; i+=step) {
         sum = 0;

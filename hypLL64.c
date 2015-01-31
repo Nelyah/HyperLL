@@ -16,20 +16,21 @@ double a_m;
 int m_size;
 int* tabCard = NULL;
 float* tabMean = NULL;
+int cpt_file_size;
 int loaded=0;
 
 void loadFile(char* filename){
     tabCard = malloc(FILE_SIZE*sizeof(int));
     tabMean = malloc(FILE_SIZE*sizeof(float));
-    int card,cpt=0;
+    int card;
     float mean, median, pct01,pct99;
-
+    cpt_file_size=0;
     FILE* f = fopen(filename,"r");
 
     while(fscanf(f,"%d %f %f %f %f",&card,&mean,&median,&pct01,&pct99) != EOF) {
-        tabCard[cpt] = card;
-        tabMean[cpt] = mean;
-        cpt++;
+        tabCard[cpt_file_size] = card;
+        tabMean[cpt_file_size] = mean;
+        cpt_file_size++;
     }
     loaded=1;
     fclose(f);
@@ -41,7 +42,10 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
     while (i < size && tabX[i] < observed) {
         i++;
     }
-    if (i==0 || i==size) return tabY[i-1] * observed/tabX[i-1];
+    if (i==size) return tabY[i-1] * observed/tabX[i-1];
+    if (i == 0) {
+        return 0;
+    }
     if (tabX[i] == observed) return tabY[i];
 
     float estim;
@@ -117,7 +121,7 @@ float count_file(char* filename){
   if (loaded != 1) loadFile(filename);
 
   rawEst = count_raw();
-  corrected = extrapol(tabMean, tabCard, FILE_SIZE, rawEst);
+  corrected = extrapol(tabMean, tabCard, cpt_file_size, rawEst);
 
   return corrected;
 }
