@@ -12,6 +12,7 @@
 #define HASH_SEED 0
 #define P 14 // precision argument
 #define HASHED_VALUES 5000000
+#define MAX_CARD 100000
 
 
 int main(int argc, const char **argv) {
@@ -28,16 +29,16 @@ int main(int argc, const char **argv) {
     char* fileRead = NULL;
     srand(time(NULL));
 
-    FILE* f = fopen("plot_file_normal.txt","w");
+    FILE* f = fopen("plot_file_relative_corrige.txt","w");
     valTab = malloc(HASHED_VALUES*sizeof(uint64_t));
     if (valTab == NULL) {
         perror("calloc");
         exit(EXIT_FAILURE);
     }
     fileRead = malloc(500*sizeof(char));
-    tabEstim = malloc((nbExp*(100000/step)+1)*sizeof(float));
+    tabEstim = malloc((nbExp*(MAX_CARD/step)+1)*sizeof(float));
     init();
-    strcpy(fileRead,"plot_1000.txt");
+    strcpy(fileRead,"plot_raw_1000.txt");
 
     //filling the array of hashed value
     for (i = 0; i < HASHED_VALUES; i++) {
@@ -47,35 +48,32 @@ int main(int argc, const char **argv) {
     }
     
     start = clock();
+    hyperLL_64bits();
     for (i = 0; i < nbExp; i++) {
-        idx = rand() % (HASHED_VALUES - 100000);
-        for (j = 0; j < 100000; j+=step) {
-            if(j!=0){
-                for (k = idx; k < (idx+step); k++) {
-                    addItem(valTab[k]);
-                }
-            }
-            hyperLL_64bits();
-            estim = count();
-            tabEstim[i+(j/step)*nbExp] = estim;
-            idx+=step;
-        }
-        reset();
-
-	printf("%d\n",i);
+      idx = rand() % (HASHED_VALUES - MAX_CARD);
+      for (j = 0; j < MAX_CARD; j+=step) {
+	if(j!=0){
+	  for (k = idx; k < (idx+step); k++) {
+	    addItem(valTab[k]);
+	  }
+	}
+	estim = count_file(fileRead);
+	tabEstim[i+(j/step)*nbExp] = estim;
+	idx+=step;
+      }
+      reset();
+      if(i%10 == 0)printf("%d\n",i);
     }
-    printf("addItem done.\n");
 
-
-// sort by Experience
-    for (i = 0; i < 100000/step; i+=nbExp) {
+    // sort by Experience
+    for (i = 0; i < MAX_CARD/step; i+=nbExp) {
         quickSort(tabEstim, i, i+(nbExp-1));
     }
 
     float sum = 0, mean;
     int cardCur = 0;
     float relative;
-    for (i = 0; i < 100000; i+=step) {
+    for (i = 0; i < MAX_CARD; i+=step) {
         sum = 0;
         for (j = 0; j < nbExp; j++) {
             sum += tabEstim[j+(i/step)*nbExp];

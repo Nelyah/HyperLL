@@ -11,7 +11,8 @@
 #define BUF_SIZE 4096
 #define HASH_SEED 0
 #define P 14 // precision argument
-
+#define HASHED_VALUES 5000000
+#define MAX_CARD 100000
 
 
 int main(int argc, const char **argv) {
@@ -29,24 +30,24 @@ int main(int argc, const char **argv) {
     srand(time(NULL));
 
     FILE* f = fopen("plot.txt","w");
-    valTab = malloc(2*pow(10,9)*sizeof(uint64_t));
+    valTab = malloc(HASHED_VALUES*sizeof(uint64_t));
     fileRead = malloc(500*sizeof(char));
-    tabEstim = malloc((nbExp*(100000/step)+1)*sizeof(float));
+    tabEstim = malloc((nbExp*(MAX_CARD/step)+1)*sizeof(float));
     init();
     strcpy(fileRead,"plot_raw_1000.txt");
 
-printf("coucou\n");
-    for (i = 0; i < 50000000; i++) {
+    printf("hachage ...\n");
+    for (i = 0; i < HASHED_VALUES; i++) {
         MurmurHash3_x64_128(&i, sizeof(int), HASH_SEED, hashVal);
         valTab[cpt] = hashVal[0];
         cpt++;
     }
     
-    printf("coucou\n");
+    printf("hachage fini.\n");
     start = clock();
     for (i = 0; i < nbExp; i++) {
-        idx = rand() % (50000000 - 100000);
-        for (j = 0; j < 100000; j+=step) {
+        idx = rand() % (HASHED_VALUES - MAX_CARD);
+        for (j = 0; j < MAX_CARD; j+=step) {
             if(j!=0){
                 for (k = idx; k < (idx+step); k++) {
                     addItem(valTab[k]);
@@ -57,21 +58,20 @@ printf("coucou\n");
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }
-        freeAll();
-        init();
-        printf("i : %d  (estim : %f)\n",i,estim);
+	reset();
+        if(i%50==0) printf("i : %d  (estim : %f)\n",i,estim);
     }
     printf("addItem done.\n");
 
 
-// sort by Experience
-    for (i = 0; i < 100000/step; i+=nbExp) {
-        quickSort(tabEstim, i, i+(nbExp-1));
+    // sort by Experience
+    for (i = 0; i < MAX_CARD/step; i+=nbExp) {
+      quickSort(tabEstim, i, i+(nbExp-1));
     }
 
     float sum = 0, mean, median, pct01, pct99;
     int cardCur = 0;
-    for (i = 0; i < 100000; i+=step) {
+    for (i = 0; i < MAX_CARD; i+=step) {
         sum = 0;
         for (j = 0; j < nbExp; j++) {
             sum += tabEstim[j+(i/step)*nbExp];

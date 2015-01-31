@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-c -Wall -O3 
 LDFLAGS=-lm
-SOURCES=murmur3.c hypLL64.c sort.c bench3_64.c#erreur_relative.c
+SOURCES=murmur3.c hypLL64.c sort.c bench3_64.c
 OBJECTS=$(SOURCES:.c=.o)
 BINARY=hyperLL
 

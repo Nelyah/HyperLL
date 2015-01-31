@@ -22,18 +22,37 @@ void loadFile(char* filename){
     tabCard = malloc(FILE_SIZE*sizeof(int));
     tabMean = malloc(FILE_SIZE*sizeof(float));
     int card,cpt=0;
-    float estimCard, mean, median, pct01,pct99;
+    float mean, median, pct01,pct99;
 
     FILE* f = fopen(filename,"r");
 
-    while(fscanf(f,"%d %f %f %f %f %f",&card,&estimCard,&mean,&median,&pct01,&pct99) != EOF) {
+    while(fscanf(f,"%d %f %f %f %f",&card,&mean,&median,&pct01,&pct99) != EOF) {
         tabCard[cpt] = card;
         tabMean[cpt] = mean;
         cpt++;
     }
     loaded=1;
+    fclose(f);
 }
 
+
+float extrapol(float* tabX, int* tabY, int size, float observed) {
+    int i=0;
+    while (i < size && tabX[i] < observed) {
+        i++;
+    }
+    if (i==0 || i==size) return tabY[i-1] * observed/tabX[i-1];
+    if (tabX[i] == observed) return tabY[i];
+
+    float estim;
+    
+    float prevX = tabX[i-1]; 
+    float nextX = tabX[i];
+    float prevY = tabY[i-1];
+    float nextY = tabY[i];
+    estim = prevY+(observed-prevX)*(nextY-prevY)/(nextX-prevX);
+    return estim;
+}
 
 void init(){
   m_size = pow(2,P);
@@ -45,7 +64,8 @@ void init(){
 }
 
 void reset(){
-  memset(M, 0, m_size);
+  int i;
+  for (i=0; i<m_size; i++) M[i]=0;
 }
 
 void freeAll(){
@@ -75,57 +95,12 @@ void addItem(uint64_t hashVal){
     if (M[idx] < clz) {
         M[idx] = clz;
     }
-    
-}
-
-float count_file(char* filename){ // Uses file to predict corrected estimation
-    int nbRegist_0 = 0; // number of register equal to 0
-    double rawEst=0, estim=0, sumComput=0;
-    rawEst=0;
-    int i;
-    
-    FILE* f = fopen(filename,"r");
-
-    for (i = 0; i < m; i++) {
-        sumComput += 1.0/pow(2, M[i]);
-        if (M[i] == 0) nbRegist_0++;
-    }
-
-    sumComput = 1.0/sumComput;
-    rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
-
-    if (loaded != 1) {
-        loadFile(filename);
-    }
-
-
-    float prevMean=0, nextMean=0;
-    int prevCard = 0, nextCard = 0;
-    i=0;
-    while (i != FILE_SIZE && tabMean[i] < rawEst) {
-        i++;
-    }
-    if (i != 0 && i != FILE_SIZE) {
-        prevCard = tabCard[i-1];
-        nextCard = tabCard[i];
-        prevMean = tabMean[i-1];
-        nextMean = tabMean[i];
-
-        estim = ((rawEst-prevMean)/(nextMean-prevMean))*prevCard;
-        estim += ((nextMean-rawEst)/(nextMean-prevMean))*nextCard;
-        
-    }
-
-    fclose(f);
-    return estim;
 }
 
 float count_raw(){
     int nbRegist_0 = 0; // number of register equal to 0
-    double rawEst=0, sumComput=0;
-    rawEst=0;
+    float rawEst=0, sumComput=0;
     int i;
-
 
     for (i = 0; i < m; i++) {
         sumComput += 1.0/pow(2, M[i]);
@@ -134,8 +109,17 @@ float count_raw(){
 
     sumComput = 1.0/sumComput;
     rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
-    // raw HLL
     return rawEst;
+}
+
+float count_file(char* filename){
+  float rawEst=0, corrected=0; 
+  if (loaded != 1) loadFile(filename);
+
+  rawEst = count_raw();
+  corrected = extrapol(tabMean, tabCard, FILE_SIZE, rawEst);
+
+  return corrected;
 }
 
 float count(){
@@ -186,13 +170,6 @@ float hyperLL_64bits(void){
         default:
             a_m = a_128(m);
     }
-
-    
-// Computation
-    
-    //float estim = count();
-
-    //printf("%f",estim);
     return 0;
 }
 
