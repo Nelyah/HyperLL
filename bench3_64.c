@@ -55,7 +55,7 @@ int main(int argc, const char **argv) {
             }
             hyperLL_64bits();
             estim = 0;
-            estim = count_file(fileRead);
+            estim = count_raw();
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }

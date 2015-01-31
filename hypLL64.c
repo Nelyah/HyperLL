@@ -126,6 +126,33 @@ float count_file(char* filename){
   return corrected;
 }
 
+float count_linearCounting(){
+    int nbRegist_0 = 0; // number of register equal to 0
+    double rawEst=0, estim=0, sumComput=0;
+    rawEst=0;
+    int i;
+
+
+    for (i = 0; i < m; i++) {
+        sumComput += 1.0/pow(2, M[i]);
+        if (M[i] == 0) nbRegist_0++;
+    }
+
+    sumComput = 1.0/sumComput;
+    rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
+    // raw HLL
+    //return rawEst;
+
+    if (nbRegist_0 != 0) {
+        // estim = linearCounting(m, nbRegist_0);
+        estim = m * log((double)(m)/nbRegist_0);
+    }else{
+        estim = rawEst;
+    }
+    return estim;
+
+}
+
 float count(){
     int nbRegist_0 = 0; // number of register equal to 0
     double rawEst=0, estim=0, sumComput=0;
