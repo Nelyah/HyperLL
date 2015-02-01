@@ -18,6 +18,7 @@ int* tabCard = NULL;
 float* tabMean = NULL;
 int cpt_file_size;
 int loaded=0;
+int nbRegist_0 = 0; // number of register equal to 0
 
 void loadFile(char* filename){
     tabCard = malloc(FILE_SIZE*sizeof(int));
@@ -43,9 +44,7 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
         i++;
     }
     if (i==size) return tabY[i-1] * observed/tabX[i-1];
-    if (i == 0) {
-        return 0;
-    }
+    if (i == 0) return tabY[0] * observed/tabX[0];
     if (tabX[i] == observed) return tabY[i];
 
     float estim;
@@ -68,6 +67,7 @@ void init(){
 }
 
 void reset(){
+  nbRegist_0 = 0;
   int i;
   for (i=0; i<m_size; i++) M[i]=0;
 }
@@ -102,18 +102,17 @@ void addItem(uint64_t hashVal){
 }
 
 float count_raw(){
-    int nbRegist_0 = 0; // number of register equal to 0
-    float rawEst=0, sumComput=0;
-    int i;
+  float rawEst=0, sumComput=0;
+  int i;
+  
+  for (i = 0; i < m; i++) {
+    sumComput += 1.0/pow(2, M[i]);
+    if (M[i] == 0) nbRegist_0++;
+  }
 
-    for (i = 0; i < m; i++) {
-        sumComput += 1.0/pow(2, M[i]);
-        if (M[i] == 0) nbRegist_0++;
-    }
-
-    sumComput = 1.0/sumComput;
-    rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
-    return rawEst;
+  sumComput = 1.0/sumComput;
+  rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
+  return rawEst;
 }
 
 float count_file(char* filename){
@@ -127,48 +126,20 @@ float count_file(char* filename){
 }
 
 float count_linearCounting(){
-    int nbRegist_0 = 0; // number of register equal to 0
-    double rawEst=0, estim=0, sumComput=0;
-    rawEst=0;
-    int i;
-
-
-    for (i = 0; i < m; i++) {
-        sumComput += 1.0/pow(2, M[i]);
-        if (M[i] == 0) nbRegist_0++;
-    }
-
-    sumComput = 1.0/sumComput;
-    rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
-    // raw HLL
-    //return rawEst;
-
-    if (nbRegist_0 != 0) {
-        // estim = linearCounting(m, nbRegist_0);
-        estim = m * log((double)(m)/nbRegist_0);
-    }else{
-        estim = rawEst;
-    }
-    return estim;
-
+  float rawEst=0, estim=0;
+  rawEst = count_raw();
+  if (nbRegist_0 != 0) {
+    // estim = linearCounting(m, nbRegist_0);
+    estim = m * log((double)(m)/nbRegist_0);
+  }else{
+    estim = rawEst;
+  }
+  return estim;
 }
 
 float count(){
-    int nbRegist_0 = 0; // number of register equal to 0
-    double rawEst=0, estim=0, sumComput=0;
-    rawEst=0;
-    int i;
-
-
-    for (i = 0; i < m; i++) {
-        sumComput += 1.0/pow(2, M[i]);
-        if (M[i] == 0) nbRegist_0++;
-    }
-
-    sumComput = 1.0/sumComput;
-    rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
-    // raw HLL
-    //return rawEst;
+    double rawEst=0, estim=0;
+    rawEst = count_raw();
 
     if (rawEst <= ((5.0/2.0)*m)) {
         if (nbRegist_0 != 0) {
