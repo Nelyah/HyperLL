@@ -58,7 +58,7 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
 }
 
 void init(){
-  m_size = pow(2,P);
+    m_size = pow(2,P);
     M = calloc(m_size,sizeof(uint64_t));
     if (M == NULL) {
         perror("calloc");
