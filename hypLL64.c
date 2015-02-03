@@ -7,7 +7,6 @@
 #include <time.h>
 #include <inttypes.h>
 
-#define P 14 // precision argument
 #define FILE_SIZE 1000
 
 uint64_t *M = NULL;

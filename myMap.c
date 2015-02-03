@@ -3,55 +3,116 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "myMap.h"
+#include "hypLL64.h"
 
-typedef uint32_t word_t;
-enum { BITS_PER_WORD = 32 };
-typedef struct bitv {
-    word_t *words; 
-    int nwords; 
-    int nbits; 
-} bit_st;
+#define SIZE_OF_VALUE 6
+#define SPARSE_MODE -1
+#define DENSE_MODE -2 
 
-static inline void check_bounds(struct bitv *b, int bit) {
-    if (b->nbits < bit) {
-        fprintf(stderr, "Attempted to access a bit out of range\n");
-        exit(1);
-    }
-}
+int SPARSE_LIMIT = (SIZE_OF_VALUE*(1 << P))/(P+SIZE_OF_VALUE);
+
+
 
 void bitv_set(struct bitv *b, int bit, int val) {
-    check_bounds(b, bit);
     b->words[bit >> 5] |= val << (31 - (bit % BITS_PER_WORD));
 }
 
 
 int bitv_get(struct bitv *b, int bit) {
-    check_bounds(b, bit);
     return (b->words[bit >> 5] & (1 << (31 - (bit % BITS_PER_WORD)))) >> (31 - (bit % BITS_PER_WORD));
 }
 
 int  bitv_read(bit_st *b, int index) {
-    int value = 0, i, bit=index*6+5;
-    
-    for (i = 0; i < 6; i++) {
-        value += (bitv_get(b, bit) << i);
-        bit--;
+    int value = 0, i, bit;
+
+    if (b->mode == DENSE_MODE) {
+        bit = index*SIZE_OF_VALUE+SIZE_OF_VALUE-1;
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            value += (bitv_get(b, bit) << i);
+            bit--;
+        }
+    }else if (b->mode == SPARSE_MODE){
+        int curKey=-1, lastPos;
+        bit = P-1; 
+        lastPos = bit;
+        while (curKey != index) {
+            curKey = 0;
+            for (i = 0; i < P; i++) {
+                curKey += (bitv_get(b, bit) << i);
+                bit--;
+            }
+            bit = lastPos+SIZE_OF_VALUE+P;
+            if (bit > b->nbits || curKey > index) {
+                // L'index n'est pas répertorié
+                return -1;
+            }
+        }
     }
 
     return value;
+}
+
+bit_st* getDense(bit_st* b){
+    if (b->mode == DENSE_MODE) return b;
+    bit_st *bn = bitv_alloc(SIZE_OF_VALUE*(1 << P));
+    bn->mode = DENSE_MODE;
+    int i, value=0, index=0, bit, bitn, prevPos;
+    bit = P+SIZE_OF_VALUE-1;
+    prevPos = bit;
+    while(bit < b->nbits){
+        index = 0;
+        value = 0;
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            value += (bitv_get(b, bit) << i);
+            bit--;
+        }
+        for (i = 0; i < P; i++) {
+            index += (bitv_get(b, bit) << i);
+            bit--;
+        }
+        bitn = index*SIZE_OF_VALUE-1;
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            bitv_set(bn, bitn, (value & 1)); 
+            bitn--;
+            value >>= 1;
+        }
+        bn->nbits += SIZE_OF_VALUE;
+        bit = prevPos + P + SIZE_OF_VALUE;
+    }
+
+    return bn;
 
 }
 
-void bitv_write(bit_st *b, int index, int value){
+void bitv_append(bit_st *b, int index, int value){
     // value must be < 2**6
-    int bit = index*6+5, i;
-    
-    for (i = 0; i < 6; i++) {
-        bitv_set(b, bit, (value & 1));
-        bit--;
-        value >>= 1;
+    int i, bit=0;
+    if (b->mode == DENSE_MODE){ 
+        bit = b->nbits+SIZE_OF_VALUE-1;
+        if (bit > b->nbAlloc) b = bitv_realloc(b, b->nbAlloc*2);
+        
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            bitv_set(b, bit, (value & 1));
+            bit--;
+            value >>= 1;
+        }
+        b->nbits += SIZE_OF_VALUE;
+    }else if (b->mode == SPARSE_MODE){
+        bit = b->nbits+P+SIZE_OF_VALUE-1;
+        if (bit > b->nbAlloc) b = bitv_realloc(b, b->nbAlloc*2);
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            bitv_set(b, bit, (value & 1));
+            bit--;
+            value >>=1;
+        }
+        for (i = 0; i < P; i++) {
+            bitv_set(b, bit, (index & 1));
+            bit--;
+            index >>=1;
+        }
+        b->nbits += P + SIZE_OF_VALUE;
     }
-
 }
 
 
@@ -62,19 +123,21 @@ void bitv_free(struct bitv *b) {
     }
 }
 
-void bitv_dump(struct bitv *b) {
-    if (b == NULL) return;
+bit_st* bitv_realloc(bit_st* b, int bits) {
+    
+    int prevNbWords = b->nwords;
+    b->nwords = (bits >> 5) + 1;
+    b->nbAlloc  = bits;
+    b->words  = realloc(b->words, b->nwords*sizeof(*b->words));
 
-    for(int i = 0; i < b->nwords; i++) {
-        word_t w = b->words[i];
-        for (int j = 0; j < BITS_PER_WORD; j++) {
-            printf("%d", w & 1);
-            w >>= 1;
-        }
-        printf(" ");
+    if (b->words == NULL) {
+        perror("realloc");
+        exit(EXIT_FAILURE);
     }
 
-    printf("\n");
+    memset(&b->words[prevNbWords], 0, sizeof(*b->words) * (b->nwords-prevNbWords));
+
+    return b;
 }
 
 bit_st* bitv_alloc(int bits) {
@@ -86,8 +149,9 @@ bit_st* bitv_alloc(int bits) {
     }
 
     b->nwords = (bits >> 5) + 1;
-    b->nbits  = bits;
+    b->nbAlloc  = bits;
     b->words  = malloc(b->nwords*sizeof(*b->words));
+    b->nbits = 0;
 
     if (b->words == NULL) {
         perror("malloc");
@@ -99,10 +163,185 @@ bit_st* bitv_alloc(int bits) {
     return b;
 }
 
+void bitv_readBits(bit_st* b, int *index, int *value, int bit){
+    int v1 = 0, idx = 0, i;
+    if (b->mode == SPARSE_MODE){
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            v1 += (bitv_get(b, bit) << i);
+            bit--;
+        }
+        for (i = 0; i < P; i++) {
+            idx += (bitv_get(b, bit) << i);
+            bit--;
+        }
+        *value = v1;
+        *index = idx;
+    }else if (b->mode == DENSE_MODE){
+        for (i = 0; i < SIZE_OF_VALUE; i++) {
+            v1 += (bitv_get(b, bit) << i);
+            bit--;
+        }
+        *value = v1;
+    }
+}
+
+bit_st* merge(bit_st* b, uint64_t* Mval, uint64_t* Midx){ // M is already sorted
+    //merge b1 and M and returns bn
+    int i;
+    int keyB = 0, valB = 0;
+    int bit=0, bitn=0, prevPos=0;
+    int cptM=0, b_isDone=0;
+    int sizeM = SPARSE_LIMIT / 4;
+    int b_incr = 0, M_incr = 0;
+
+    bit_st* bn = bitv_alloc(b->nbAlloc);
+    bn->mode = b->mode;
+    if (b->nbits == 0) {
+        while (cptM < sizeM){
+            bitv_append(bn, Midx[cptM], Mval[cptM]);
+            cptM++;
+        }
+        return bn;
+    }
+
+    if (b->mode == SPARSE_MODE) {
+        
+        bit = P + SIZE_OF_VALUE-1;
+        
+        // First read of valB and Midx[cptM]
+        bitv_readBits(b, &keyB, &valB, bit);
+        bit += P + SIZE_OF_VALUE;
+        // ------------------------
+
+        while (cptM < sizeM || (bit+1) > b->nbits){
+            if (keyB < Midx[cptM]) {  
+// first case ------------------------------------------------------------
+                bitv_append(bn, keyB, valB); 
+                if ((bit+1) > b->nbits) { 
+                    while (cptM < sizeM){
+                        bitv_append(bn, Midx[cptM], Mval[cptM]);
+                        cptM++;
+                    }
+                }else {
+                    bitv_readBits(b, &keyB, &valB, bit);
+                    bit += P + SIZE_OF_VALUE;
+                }
+            }else if (keyB > Midx[cptM]){
+// second case ------------------------------------------------------------
+                bitv_append(bn, Midx[cptM], Mval[cptM]);
+                cptM++;
+                if (cptM >= sizeM) {
+                    bitv_append(bn, keyB, valB); 
+                    while ((bit+1) < b->nbits){
+                        bitv_readBits(b, &keyB, &valB, bit);
+                        bit += P + SIZE_OF_VALUE;
+                        bitv_append(bn, keyB, valB); 
+                    }
+                }
+            }else if (keyB == Midx[cptM]){
+// third case ------------------------------------------------------------
+                if (valB > Mval[cptM]) bitv_append(bn, keyB, valB);
+                else bitv_append(bn, Midx[cptM], Mval[cptM]);
+                cptM++;
+
+                if ((bit+1) > b->nbits) { 
+                    while (cptM < sizeM){
+                        bitv_append(bn, Midx[cptM], Mval[cptM]);
+                        cptM++;
+                    }
+                }else{
+                    bitv_readBits(b, &keyB, &valB, bit);
+                    bit += P + SIZE_OF_VALUE;
+                }
+                if (cptM > sizeM){
+                    bitv_append(bn, keyB, valB); 
+                    while ((bit+1) < b->nbits){
+                        bitv_readBits(b, &keyB, &valB, bit);
+                        bit += P + SIZE_OF_VALUE;
+                        bitv_append(bn, keyB, valB); 
+                    }
+                }
+            }
+        }
+    }else if (b->mode == DENSE_MODE){
+        bit = SIZE_OF_VALUE - 1;
+    
+        // First read of valB and Midx[cptM]
+        bitv_readBits(b, &keyB, &valB, bit);
+        bit += SIZE_OF_VALUE;
+        Midx[cptM] = Midx[cptM];
+        // ------------------------
+        
+        while (cptM < sizeM || (bit+1) > b->nbits){
+            if (keyB < Midx[cptM]) { 
+// first case ------------------------------------------------------------
+                bitv_append(bn, keyB, valB); 
+                if ((bit+1) > b->nbits) { 
+                    while (cptM < sizeM){
+                        bitv_append(bn, Midx[cptM], Mval[cptM]);
+                        cptM++;
+                    }
+                }else {
+                    bitv_readBits(b, &keyB, &valB, bit);
+                    bit += SIZE_OF_VALUE;
+                }
+            }else if (Midx[cptM] > keyB){
+// second case ------------------------------------------------------------
+                bitv_append(bn, Midx[cptM], Mval[cptM]);
+                cptM++;
+                if (cptM >= sizeM) {
+                    bitv_append(bn, keyB, valB); 
+                    while ((bit+1) < b->nbits){
+                        bitv_readBits(b, &keyB, &valB, bit);
+                        bit += SIZE_OF_VALUE;
+                        bitv_append(bn, keyB, valB); 
+                    }
+                }
+            }else if (keyB == Midx[cptM]){
+// third case ------------------------------------------------------------
+                if (valB > Mval[cptM]) bitv_append(bn, keyB, valB);
+                else bitv_append(bn, Midx[cptM], Mval[cptM]);
+                cptM++;
+
+                if ((bit+1) > b->nbits) { 
+                    while (cptM < sizeM){
+                        bitv_append(bn, Midx[cptM], Mval[cptM]);
+                        cptM++;
+                    }
+                }else{
+                    bitv_readBits(b, &keyB, &valB, bit);
+                    bit += SIZE_OF_VALUE;
+                }
+                if (cptM > sizeM){
+                    bitv_append(bn, keyB, valB); 
+                    while ((bit+1) < b->nbits){
+                        bitv_readBits(b, &keyB, &valB, bit);
+                        bit += P + SIZE_OF_VALUE;
+                        bitv_append(bn, keyB, valB); 
+                    }
+                }
+            }
+        }
+    }
+    
+    return bn;
+}
+
+void updateMax(bit_st* b, int index, int value){
+    int curVal = bitv_read(b, index);
+    if (value > curVal) {
+        bitv_write(b, index, value);
+    }
+}
+
+
+int bytesUsed(bit_st *b) {
+    return b->nbits*8;
+}
 
 
 int main(int argc, char *argv[]) {
-    struct bitv *b = bitv_alloc(32);
+/*    struct bitv *b = bitv_alloc(32);
     
     word_t a = 5;
     bitv_write(b,0,8);
@@ -112,13 +351,12 @@ int main(int argc, char *argv[]) {
     printf("a : %d\n",a);
 //    bitv_set(b, 1*20+3);
 //    bitv_set(b, 3);
-/*    bitv_set(b, 3);
+    bitv_set(b, 3);
     bitv_set(b, 5);
     bitv_set(b, 7);
     bitv_set(b, 9);
-    bitv_set(b, 32);*/
-    bitv_dump(b);
-    bitv_free(b);
+    bitv_set(b, 32);
+    bitv_free(b);*/
                                     
     return 0;
 }
