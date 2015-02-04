@@ -31,6 +31,7 @@ int  bitv_read(bit_st *b, int index) {
         for (i = 0; i < SIZE_OF_VALUE; i++) {
             value += (bitv_get(b, bit) << i);
             bit--;
+            printf("%d\n",value);
         }
     }else if (b->mode == SPARSE_MODE){
         int curKey=-1, lastPos;
@@ -42,8 +43,16 @@ int  bitv_read(bit_st *b, int index) {
                 curKey += (bitv_get(b, bit) << i);
                 bit--;
             }
+            if (curKey == index) {
+                bit = lastPos + SIZE_OF_VALUE;
+                for (i = 0; i < SIZE_OF_VALUE; i++) {
+                    value += bitv_get(b, bit) << i;
+                    bit--;
+                }
+                return value;
+            }
             bit = lastPos+SIZE_OF_VALUE+P;
-            if (bit > b->nbits || curKey > index) {
+            if (curKey != index && (bit > b->nbits || curKey > index)) {
                 // L'index n'est pas répertorié
                 return -1;
             }
@@ -187,12 +196,10 @@ void bitv_readBits(bit_st* b, int *index, int *value, int bit){
 
 bit_st* merge(bit_st* b, uint64_t* Mval, uint64_t* Midx){ // M is already sorted
     //merge b1 and M and returns bn
-    int i;
     int keyB = 0, valB = 0;
-    int bit=0, bitn=0, prevPos=0;
-    int cptM=0, b_isDone=0;
+    int bit=0;
+    int cptM=0;
     int sizeM = SPARSE_LIMIT / 4;
-    int b_incr = 0, M_incr = 0;
 
     bit_st* bn = bitv_alloc(b->nbAlloc);
     bn->mode = b->mode;
@@ -330,7 +337,7 @@ bit_st* merge(bit_st* b, uint64_t* Mval, uint64_t* Midx){ // M is already sorted
 void updateMax(bit_st* b, int index, int value){
     int curVal = bitv_read(b, index);
     if (value > curVal) {
-        bitv_write(b, index, value);
+       // bitv_write(b, index, value);
     }
 }
 
@@ -339,10 +346,35 @@ int bytesUsed(bit_st *b) {
     return b->nbits*8;
 }
 
+void bitv_dump(struct bitv *b) {
+    if (b == NULL) return;
+
+    for(int i = 0; i < b->nwords; i++) {
+        word_t w = b->words[i];
+
+        for (int j = 0; j < BITS_PER_WORD; j++) {
+            printf("%d", w & 1);
+            w >>= 1;
+        }
+
+        printf(" ");
+    }
+
+    printf("\n");
+}
+
+
+
 
 int main(int argc, char *argv[]) {
-/*    struct bitv *b = bitv_alloc(32);
-    
+    struct bitv *b = bitv_alloc(32);
+    b->mode = DENSE_MODE;
+
+    bitv_append(b,1,3);
+    bitv_dump(b);
+    printf("%d\n",b->nbits);
+    printf("%d\n",bitv_read(b,1));
+/*    
     word_t a = 5;
     bitv_write(b,0,8);
     a = a << 29;
