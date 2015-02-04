@@ -8,7 +8,7 @@ int necessary_size (uint32_t value){
   if (value >= (1 << 7)) {
     if (value >= (1 << 14)) {
       if (value >= (1 << 21)) {
-        if (value >= (1 << 28)) return 5 else return 4;
+        if (value >= (1 << 28)) return 5; else return 4;
       } else { return 3; }
     } else {
       return 2;
@@ -20,7 +20,7 @@ int necessary_size (uint32_t value){
 
 uint8_t* encode (uint32_t value){
   int s;
-  s = necessary_size(value);
+    s = necessary_size(value);
   uint8_t* target;
   target = malloc(s*sizeof(uint8_t));
   target[0] = (uint8_t)(value | 0x80);
@@ -69,6 +69,25 @@ uint32_t decode(uint8_t* encoded){
   res += aux;
   return res;
 }
+
+uint32_t decode2(uint8_t* encoded, int *len){
+  uint8_t tmp, mask;
+  int cpt = 0;
+  uint32_t aux, res = 0;
+  tmp = encoded[cpt];
+  mask = (uint8_t)((1<<7) -1);
+  while (tmp >= (1 << 7)){
+    aux = (uint32_t) ((tmp & mask)<<(7*cpt));
+    res += aux;
+    cpt++;
+    tmp = encoded[cpt];
+  }
+  aux = (uint32_t) ((tmp & mask)<<(7*cpt));
+  res += aux;
+  *len=cpt+1;
+  return res;
+}
+
 /*
 int main(int argc, char *argv[]) {
   uint32_t a = 981245893;
