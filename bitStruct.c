@@ -168,17 +168,17 @@ void bitv_free(bit_st *b) {
 
 bit_st* bitv_realloc(bit_st* b, int bits) {
     
-    long prevSizeof = b->nwords*sizeof(*b->words);
+    long prevSizeof = b->nwords;
     b->nwords = (bits >> 5) + 1;
     b->nbAlloc  = b->nwords*BITS_PER_WORD;
-    b->words  = realloc(b->words, b->nwords*sizeof(*b->words));
+    b->words  = realloc(b->words, b->nwords*sizeof(b->words));
 
     if (b->words == NULL) {
         perror("realloc");
         exit(EXIT_FAILURE);
     }
 
-    memset(b->words+prevSizeof, 0, (sizeof(*b->words)*b->nwords)-prevSizeof);
+    memset(b->words+prevSizeof, 0, sizeof(b->words)*(b->nwords-prevSizeof));
 
     return b;
 }
@@ -193,15 +193,15 @@ bit_st* bitv_alloc(int bits) {
 
     b->nwords = (bits >> 5) + 1;
     b->nbAlloc  = b->nwords*BITS_PER_WORD;
-    b->words  = malloc(b->nwords*sizeof(*b->words));
+    b->words  = calloc(b->nwords, sizeof(b->words));
     b->nbits = 0;
 
     if (b->words == NULL) {
-        perror("malloc");
+        perror("calloc");
         exit(EXIT_FAILURE);
     }
 
-    memset(b->words, 0, sizeof(*b->words) * b->nwords);
+    memset(b->words, 0, sizeof(b->words) * b->nwords);
 
     return b;
 }
@@ -220,6 +220,7 @@ void bitv_readBits(bit_st* b, int *index, int *value, int bit){
         *value = v1;
         *index = idx;
     }else if (b->mode == DENSE_MODE){
+        *index = bit/SIZE_OF_VALUE;
         for (i = 0; i < SIZE_OF_VALUE; i++) {
             v1 += (bitv_get(b, bit) << i);
             bit--;

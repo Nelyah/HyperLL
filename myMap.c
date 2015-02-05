@@ -7,11 +7,11 @@
 #include "bitStruct.h"
 
 
-void unifTab(uint64_t* Mval, uint64_t* Midx){
+void unifTab(uint64_t* Mval, uint64_t* Midx, int* sizeM){
 /* removes all index duplicate in M, and keeps the one with highest value 
  * M should already be sorted */
     int max=0, idx=0, cpt=0, cpt2=0;
-    while (cpt < SPARSE_LIMIT/4){
+    while (cpt < *sizeM){
         max = Mval[cpt];
         idx = Midx[cpt];
         if (idx != Midx[cpt+1]) {
@@ -27,11 +27,7 @@ void unifTab(uint64_t* Mval, uint64_t* Midx){
         Mval[cpt2] = Mval[cpt-1];
         cpt2++;
     }
-    while (cpt2 < SPARSE_LIMIT/4) {
-        Midx[cpt2] = 0;
-        Mval[cpt2] = 0;
-        cpt2++;
-    }
+    *sizeM = cpt2;
 }
 
 
@@ -41,6 +37,8 @@ bit_st* merge(bit_st* b, uint64_t* Mval, uint64_t* Midx, int sizeM){ // M is alr
     int bit=0;
     int cptM=0;
     int b_isDone = 0;
+
+    unifTab(Mval, Midx, &sizeM);
 
     bit_st* bn = bitv_alloc(b->nbAlloc);
     bn->mode = b->mode;
@@ -60,11 +58,7 @@ bit_st* merge(bit_st* b, uint64_t* Mval, uint64_t* Midx, int sizeM){ // M is alr
         bitv_readBits(b, &keyB, &valB, bit);
         bit += P + SIZE_OF_VALUE;
         // ------------------------
-printf("sizeM %d\n",sizeM);
-printf("cptM %d\n",cptM);
-printf("bit : %d nbit %d\n",bit,b->nbits);
         while (cptM < sizeM && b_isDone == 0){
-printf("cptM %d\n",cptM);
             if (keyB < Midx[cptM]) {  
 // first case ------------------------------------------------------------
                 bitv_append(bn, keyB, valB); 
@@ -78,7 +72,6 @@ printf("cptM %d\n",cptM);
                     bitv_readBits(b, &keyB, &valB, bit);
                     bit += P + SIZE_OF_VALUE;
                 }
-                printf("1ère\n");
             }else if (keyB > Midx[cptM]){
 // second case ------------------------------------------------------------
                 bitv_append(bn, Midx[cptM], Mval[cptM]);
@@ -92,7 +85,6 @@ printf("cptM %d\n",cptM);
                     }
                     b_isDone = 1;
                 }
-                printf("2ème\n");
             }else if (keyB == Midx[cptM]){
 // third case ------------------------------------------------------------
                 if (valB > Mval[cptM]) bitv_append(bn, keyB, valB);
@@ -118,7 +110,6 @@ printf("cptM %d\n",cptM);
                     }
                     b_isDone = 1;
                 }
-                printf("3ème\n");
             }
         }
     }else if (b->mode == DENSE_MODE){
@@ -176,7 +167,7 @@ printf("cptM %d\n",cptM);
                     bitv_append(bn, keyB, valB); 
                     while (bit < b->nbits){
                         bitv_readBits(b, &keyB, &valB, bit);
-                        bit += P + SIZE_OF_VALUE;
+                        bit += SIZE_OF_VALUE;
                         bitv_append(bn, keyB, valB); 
                     }
                     b_isDone = 1;
@@ -185,7 +176,6 @@ printf("cptM %d\n",cptM);
         }
     }
     
-    printf("bit : %d cptM %d\n",bit,cptM);
     return bn;
 }
 
@@ -198,12 +188,16 @@ int main(int argc, char *argv[]) {
     b->mode = SPARSE_MODE;
 
     bitv_append(b,4,15);
+    printf("nbits %d\n",b->nbAlloc);
     bitv_append(b,5,3);
-    printf("nbits %d\n",b->nbits);
+    printf("nbits %d\n",b->nbAlloc);
     bitv_append(b,6,3);
-    printf("nbits %d\n",b->nbits);
+    printf("nbits %d\n",b->nbAlloc);
     bitv_append(b,7,3);
     updateMax(b,7,4);
+    printf("nbits %d\n",b->nbAlloc);
+    bitv_append(b,800,3);
+    printf("nbits %d\n",b->nbits);
     bitv_dump(b);
     printf("nbits %d\n",b->nbits);
     printf("nbAlloc %d\n",b->nbAlloc);
@@ -218,6 +212,7 @@ int main(int argc, char *argv[]) {
     Mval[2] = 10;
     Midx[3] = 8;
     Mval[3] = 9;
+    b = getDense(b);
     bit_st* bn = merge(b,Mval,Midx,4);
     printf("1 : %d\n",bitv_read(bn,1));
     printf("3 : %d\n",bitv_read(bn,3));
@@ -231,7 +226,6 @@ int main(int argc, char *argv[]) {
     printf("8 : %d\n",bitv_read(bn,8));
 
     printf("get dense...\n");
-    bn = getDense(bn);
     printf("8 : %d\n",bitv_read(bn,8));
 
 /*    
