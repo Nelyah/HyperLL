@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bitStruct.h"
-#include "hypLL64.h"
 
+int SPARSE_LIMIT = (SIZE_OF_VALUE*(1 << P))/(P+SIZE_OF_VALUE);
 
-void bitv_set(struct bitv *b, int bit, int val) {
+void bitv_set(bit_st *b, int bit, int val) {
     int bitR = bitv_get(b,bit);
     if (bitR == 1) {
         if (val == 0) {
@@ -17,7 +17,7 @@ void bitv_set(struct bitv *b, int bit, int val) {
 }
 
 
-int bitv_get(struct bitv *b, int bit) {
+int bitv_get(bit_st *b, int bit) {
     return (b->words[bit >> 5] & (1 << (31 - (bit % BITS_PER_WORD)))) >> (31 - (bit % BITS_PER_WORD));
 }
 
@@ -65,28 +65,20 @@ bit_st* getDense(bit_st* b){
     if (b->mode == DENSE_MODE) return b;
     bit_st *bn = bitv_alloc(SIZE_OF_VALUE*(1 << P));
     bn->mode = DENSE_MODE;
-    int i, value=0, index=0, bit, bitn, prevPos;
+    bn->nbits = (SIZE_OF_VALUE*(1 << P));
+    int i, value=0, index=0, bit, bitn;
     bit = P+SIZE_OF_VALUE-1;
-    prevPos = bit;
     while(bit < b->nbits){
         index = 0;
         value = 0;
-        for (i = 0; i < SIZE_OF_VALUE; i++) {
-            value += (bitv_get(b, bit) << i);
-            bit--;
-        }
-        for (i = 0; i < P; i++) {
-            index += (bitv_get(b, bit) << i);
-            bit--;
-        }
-        bitn = index*SIZE_OF_VALUE-1;
+        bitv_readBits(b,&index,&value,bit);
+        bitn = (index*SIZE_OF_VALUE)+SIZE_OF_VALUE-1;
         for (i = 0; i < SIZE_OF_VALUE; i++) {
             bitv_set(bn, bitn, (value & 1)); 
             bitn--;
             value >>= 1;
         }
-        bn->nbits += SIZE_OF_VALUE;
-        bit = prevPos + P + SIZE_OF_VALUE;
+        bit += P + SIZE_OF_VALUE;
     }
 
     return bn;
@@ -167,7 +159,7 @@ void bitv_write(bit_st* b, int index, int value){
 }
 
 
-void bitv_free(struct bitv *b) {
+void bitv_free(bit_st *b) {
     if (b != NULL) {
         if (b->words != NULL) free(b->words);
         free(b);
@@ -284,10 +276,12 @@ void updateMax(bit_st* b, int index, int value){
 
 
 int bytesUsed(bit_st *b) {
-    return b->nbits*8;
+    int val = b->nbits/8;
+    if (b->nbits % 8 != 0) val++;
+    return val;
 }
 
-void bitv_dump(struct bitv *b) {
+void bitv_dump(bit_st *b) {
     if (b == NULL) return;
 
     for(int i = 0; i < b->nwords; i++) {
