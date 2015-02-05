@@ -10,7 +10,7 @@ char* val = "";
 uint32_t prev = 0;
 
 void concat(char* new){
-  char* tmp = malloc(strlen(val)+strlen(new)); 
+  char* tmp = malloc(strlen(val)+strlen(new)+1); 
   strcpy(tmp, val);
   strcat(tmp, new);
   val=tmp;
@@ -20,7 +20,8 @@ void appendInt32_nonDelta(int value){
   assert( value >= 0 );
   char* encoded;
   uint32_t v = (uint32_t) value;
-  encoded =(char*) encode(v);
+  uint8_t* tab8 = encode(v);
+  encoded =(char*) tab8;
   concat(encoded);
 }
 
@@ -38,34 +39,6 @@ int string_size(){
 }
 
 void reset_string(){
+  val = NULL;
   val="";
 }
-
-/*int main(int argc, char *argv[]) {
-  int s;
-  uint32_t a = 15;
-  uint32_t b = 16;
-  uint32_t c = 17;
-  uint32_t d = 18;
-  uint32_t e = 19;
-  uint32_t f = 20;
-
-  appendInt32(a);
-  appendInt32(b);
-  appendInt32(c);
-  appendInt32(d);
-  appendInt32(e);
-  appendInt32(f);
-
-  appendInt32_nonDelta(a);
-  appendInt32_nonDelta(b);
-  appendInt32_nonDelta(c);
-  appendInt32_nonDelta(d);
-  appendInt32_nonDelta(e);
-  appendInt32_nonDelta(f);
-
-  s = string_size();
-  printf("size: %d\n",s);
-
-  return 0;
-}*/
