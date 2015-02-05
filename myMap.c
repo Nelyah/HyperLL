@@ -15,7 +15,14 @@ int SPARSE_LIMIT = (SIZE_OF_VALUE*(1 << P))/(P+SIZE_OF_VALUE);
 
 
 void bitv_set(struct bitv *b, int bit, int val) {
-    b->words[bit >> 5] |= val << (31 - (bit % BITS_PER_WORD));
+    int bitR = bitv_get(b,bit);
+    if (bitR == 1) {
+        if (val == 0) {
+            b->words[bit >> 5] -= 1 << (31 - (bit % BITS_PER_WORD));
+        }
+    }else if (bitR == 0){
+        b->words[bit >> 5] |= val << (31 - (bit % BITS_PER_WORD));
+    }
 }
 
 
@@ -38,20 +45,17 @@ int  bitv_read(bit_st *b, int index) {
         bit = P-1; 
         lastPos = bit;
         while (curKey != index) {
-            printf("curK : %d\n", curKey);
             curKey = 0;
             for (i = 0; i < P; i++) {
                 curKey += (bitv_get(b, bit) << i);
                 bit--;
             }
-            printf("curK : %d\n", curKey);
             if (curKey == index) {
                 bit = lastPos + SIZE_OF_VALUE;
                 for (i = 0; i < SIZE_OF_VALUE; i++) {
                     value += bitv_get(b, bit) << i;
                     bit--;
                 }
-                printf("value %d\n",value);
                 return value;
             }
             bit = lastPos+SIZE_OF_VALUE+P;
@@ -63,7 +67,7 @@ int  bitv_read(bit_st *b, int index) {
         }
     }
 
-    return -1;
+    return -2;
 }
 
 bit_st* getDense(bit_st* b){
@@ -110,20 +114,15 @@ void bitv_append(bit_st *b, int index, int value){
         }
     }else if (b->mode == SPARSE_MODE){
         bit = b->nbits+P+SIZE_OF_VALUE-1;
-        printf("coucou\n");
         while (bit > b->nbAlloc) b = bitv_realloc(b, b->nbAlloc*2);
-        printf("coucou2\n");
-            printf("app\n");
         for (i = 0; i < SIZE_OF_VALUE; i++) {
             bitv_set(b, bit, (value & 1));
             bit--;
-            printf("%d",(value & 1));
             value >>=1;
         }
         for (i = 0; i < P; i++) {
             bitv_set(b, bit, (index & 1));
             bit--;
-            printf("%d",(index & 1));
             index >>=1;
         }
         b->nbits += P + SIZE_OF_VALUE;
@@ -131,11 +130,12 @@ void bitv_append(bit_st *b, int index, int value){
 }
 
 void bitv_write(bit_st* b, int index, int value){
-    
-    if (b->mode == DENSE_MODE) {
-        bitv_append(b,index,value);
-    }else if(b->mode == SPARSE_MODE){
-        int curKey=-1, bit, i, lastPos, curVal=0;
+    if (b->mode == DENSE_MODE){
+        int curVal = bitv_read(b, index);
+        if (value > curVal) bitv_append(b, index, value);
+    }else {
+        int bit, i, lastPos, curVal=0;
+        int curKey = -1;
         bit = P-1; 
         lastPos = bit;
         while (curKey != index) {
@@ -145,22 +145,26 @@ void bitv_write(bit_st* b, int index, int value){
                 bit--;
             }
             if (curKey == index) {
-                bit = lastPos + SIZE_OF_VALUE;
+                bit = lastPos + SIZE_OF_VALUE ;
+                lastPos = bit;
                 for (i = 0; i < SIZE_OF_VALUE; i++) {
                     curVal += bitv_get(b, bit) << i;
                     bit--;
                 }
-                bit = lastPos + SIZE_OF_VALUE;
+                bit += SIZE_OF_VALUE;
                 break;
             }
             bit = lastPos+SIZE_OF_VALUE+P;
+            lastPos = bit;
             if (curKey != index && (bit > b->nbits || curKey > index)) {
                 // L'index n'est pas répertorié
                 curKey = -1;
+                break;
             }
         }
         if (curKey == -1 ) {
             bitv_append(b,index,value);
+            
         }else{
             for (i = 0; i < SIZE_OF_VALUE; i++) {
                 bitv_set(b, bit, (value & 1));
@@ -191,9 +195,7 @@ bit_st* bitv_realloc(bit_st* b, int bits) {
         exit(EXIT_FAILURE);
     }
 
-printf("pouet1\n");
     memset(b->words+prevSizeof, 0, (sizeof(*b->words)*b->nwords)-prevSizeof);
-printf("pouet\n");
 
     return b;
 }
@@ -384,7 +386,6 @@ bit_st* merge(bit_st* b, uint64_t* Mval, uint64_t* Midx){ // M is already sorted
 }
 
 void updateMax(bit_st* b, int index, int value){
-    printf("updatemax start\n");
     if (b->mode == DENSE_MODE){
         int curVal = bitv_read(b, index);
         if (value > curVal) bitv_append(b, index, value);
@@ -399,9 +400,9 @@ void updateMax(bit_st* b, int index, int value){
                 curKey += (bitv_get(b, bit) << i);
                 bit--;
             }
-        printf("test2 curkey : %d\n",curKey);
             if (curKey == index) {
                 bit = lastPos + SIZE_OF_VALUE ;
+                lastPos = bit;
                 for (i = 0; i < SIZE_OF_VALUE; i++) {
                     curVal += bitv_get(b, bit) << i;
                     bit--;
@@ -416,14 +417,10 @@ void updateMax(bit_st* b, int index, int value){
                 curKey = -1;
                 break;
             }
-        printf("test curkey : %d\n",curKey);
         }
-            printf("cur2 : %d val %d\n",curVal, value);
-            printf("curk : %d ind %d\n",curKey, index);
         if (curKey == -1 ) {
             bitv_append(b,index,value);
         }else if (curVal < value){
-            printf("cur : %d val %d\n",curVal, value);
             for (i = 0; i < SIZE_OF_VALUE; i++) {
                 bitv_set(b, bit, (value & 1));
                 bit--;
@@ -459,7 +456,7 @@ void bitv_dump(struct bitv *b) {
 
 
 int main(int argc, char *argv[]) {
-    struct bitv *b = bitv_alloc(16);
+    struct bitv *b = bitv_alloc(11);
     b->mode = SPARSE_MODE;
 
     bitv_append(b,5,3);
@@ -467,7 +464,7 @@ int main(int argc, char *argv[]) {
     bitv_append(b,6,3);
     printf("nbits %d\n",b->nbits);
     bitv_append(b,7,3);
-//    updateMax(b,7,4);
+    updateMax(b,7,4);
     bitv_dump(b);
     printf("nbits %d\n",b->nbits);
     printf("nbAlloc %d\n",b->nbAlloc);
