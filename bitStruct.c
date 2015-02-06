@@ -285,17 +285,26 @@ int bytesUsed(bit_st *b) {
 void bitv_dump(bit_st *b) {
     if (b == NULL) return;
 
-    for(int i = 0; i < b->nwords; i++) {
-        word_t w = b->words[i];
+    int bit =0,cpt=0;
 
-        for (int j = 0; j < BITS_PER_WORD; j++) {
-            printf("%d", w & 1);
-            w >>= 1;
+    for (int i = 0; i < b->nbits; i++) {
+        if (b->mode == SPARSE_MODE) {
+            if (i % 20 == 0 && i != 0) {
+                printf("   ");
+                cpt = 0;
+            }
+            if (cpt == 14) {
+                printf(" ");
+            }
+        }else if (b->mode == DENSE_MODE){
+            if (i % 6 == 0 && i != 0) {
+                printf(" ");
+            }
         }
-
-        printf(" ");
+        printf("%d",bitv_get(b,bit));
+        cpt++;
+        bit++;
     }
-
     printf("\n");
 }
 
