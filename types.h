@@ -9,11 +9,12 @@ extern int SPARSE_LIMIT;
 
 
 
-typedef uint32_t word_t;
-enum { BITS_PER_WORD = 32 };
+typedef char word_t;
+enum { BITS_PER_WORD = 8 };
 
 typedef struct {
     word_t *words; 
+    int cptW;
     int nwords; 
     int nbits;  // number of used bits
     int nbAlloc; // number of allocated bits

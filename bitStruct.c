@@ -9,16 +9,16 @@ void bitv_set(bit_st *b, int bit, int val) {
     int bitR = bitv_get(b,bit);
     if (bitR == 1) {
         if (val == 0) {
-            b->words[bit >> 5] -= 1 << (31 - (bit % BITS_PER_WORD));
+            b->words[bit >> 3] -= 1 << (31 - (bit % BITS_PER_WORD));
         }
     }else if (bitR == 0){
-        b->words[bit >> 5] |= val << (31 - (bit % BITS_PER_WORD));
+        b->words[bit >> 3] |= val << (31 - (bit % BITS_PER_WORD));
     }
 }
 
 
 int bitv_get(bit_st *b, int bit) {
-    return (b->words[bit >> 5] & (1 << (31 - (bit % BITS_PER_WORD)))) >> (31 - (bit % BITS_PER_WORD));
+    return (b->words[bit >> 3] & (1 << (7 - (bit % BITS_PER_WORD)))) >> (7 - (bit % BITS_PER_WORD));
 }
 
 int  bitv_read(bit_st *b, int index) {
@@ -169,7 +169,7 @@ void bitv_free(bit_st *b) {
 bit_st* bitv_realloc(bit_st* b, int bits) {
     
     long prevSizeof = b->nwords;
-    b->nwords = (bits >> 5) + 1;
+    b->nwords = (bits >> 3) + 1;
     b->nbAlloc  = b->nwords*BITS_PER_WORD;
     b->words  = realloc(b->words, b->nwords*sizeof(b->words));
 
@@ -191,10 +191,11 @@ bit_st* bitv_alloc(int bits) {
         exit(EXIT_FAILURE);
     }
 
-    b->nwords = (bits >> 5) + 1;
+    b->nwords = (bits >> 3) + 1;
     b->nbAlloc  = b->nwords*BITS_PER_WORD;
     b->words  = calloc(b->nwords, sizeof(b->words));
     b->nbits = 0;
+    b->cptW = 0;
 
     if (b->words == NULL) {
         perror("calloc");

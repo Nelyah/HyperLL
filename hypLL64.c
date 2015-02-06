@@ -9,7 +9,7 @@
 
 #define FILE_SIZE 1000
 
-uint64_t *M = NULL;
+uint32_t *M = NULL;
 int m;
 double a_m;
 int m_size;
@@ -58,7 +58,7 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
 
 void init(){
     m_size = pow(2,P);
-    M = calloc(m_size,sizeof(uint64_t));
+    M = calloc(m_size,sizeof(uint32_t));
     if (M == NULL) {
         perror("calloc");
         exit(EXIT_FAILURE);

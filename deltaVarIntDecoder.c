@@ -3,19 +3,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "types.h"
 #include "varint.h"
 #include "deltaVarIntEncoder.h"
 
-char* encoded = NULL;
+uint8_t* encoded = NULL;
 int idx=0;
 int len=0;
 int prevdecoded=0;
 
-void deltaVarIntDecoder(char* value){
+void deltaVarIntDecoder(uint8_t* b, int size){
   encoded = NULL;
-  encoded = value;
+  encoded = b;
   idx=0;
-  len=strlen(encoded);
+  len = size;
 }
 
 uint32_t getNext_noDelta(){
