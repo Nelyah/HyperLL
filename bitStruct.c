@@ -9,16 +9,16 @@ void bitv_set(bit_st *b, int bit, int val) {
     int bitR = bitv_get(b,bit);
     if (bitR == 1) {
         if (val == 0) {
-            b->words[bit >> 3] -= 1 << (31 - (bit % BITS_PER_WORD));
+            b->words[bit >> 3] -= 1 << ((BITS_PER_WORD-1) - (bit % BITS_PER_WORD));
         }
     }else if (bitR == 0){
-        b->words[bit >> 3] |= val << (31 - (bit % BITS_PER_WORD));
+        b->words[bit >> 3] |= val << ((BITS_PER_WORD-1) - (bit % BITS_PER_WORD));
     }
 }
 
 
 int bitv_get(bit_st *b, int bit) {
-    return (b->words[bit >> 3] & (1 << (7 - (bit % BITS_PER_WORD)))) >> (7 - (bit % BITS_PER_WORD));
+    return (b->words[bit >> 3] & (1 << ((BITS_PER_WORD-1) - (bit % BITS_PER_WORD)))) >> ((BITS_PER_WORD-1) - (bit % BITS_PER_WORD));
 }
 
 int  bitv_read(bit_st *b, int index) {

@@ -20,7 +20,7 @@ int necessary_size (uint32_t value){
 
 uint8_t* encode (uint32_t value){
   int s;
-    s = necessary_size(value);
+  s = necessary_size(value);
   uint8_t* target;
   target = malloc(s*sizeof(uint8_t));
   target[0] = (uint8_t)(value | 0x80);
