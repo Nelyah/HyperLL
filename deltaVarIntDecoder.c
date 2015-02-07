@@ -12,12 +12,19 @@ int idx=0;
 int len=0;
 int prevdecoded=0;
 
-void deltaVarIntDecoder(uint8_t* b){
+void deltaVarIntDecoder(uint8_t* b, int size){
   encoded = NULL;
   encoded = b;
   idx=0;
-  len = strlen((char*)b);
+  len = size;
   prevdecoded = 0;
+}
+
+void reset_varintDecoder(){
+    encoded = NULL;
+    idx=0;
+    len=0;
+    prevdecoded=0;
 }
 
 uint32_t getNext_noDelta(){

@@ -7,10 +7,12 @@
 #define a_64 0.709
 #define a_128(m) 0.7213/(1+0.079/m) 
 #define P 14
+#include <inttypes.h>
 
 uint64_t lastBits(int n, uint64_t val);
 float hyperLL_64bits(void);
 void addItem(uint64_t hashVal);
+void merge_tabs(void);
 void init(void);
 void reset(void);
 void freeAll(void);

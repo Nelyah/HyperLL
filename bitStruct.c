@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bitStruct.h"
+#include "deltaVarIntEncoder.h"
+#include "deltaVarIntDecoder.h"
+#include "myMap.h"
 
 int SPARSE_LIMIT = (SIZE_OF_VALUE*(1 << P))/(P+SIZE_OF_VALUE);
 
@@ -62,25 +65,31 @@ int  bitv_read(bit_st *b, int index) {
 }
 
 bit_st* getDense(bit_st* b){
+// if it's SPARSE_MODE, we'll need to decode
     if (b->mode == DENSE_MODE) return b;
-    bit_st *bn = bitv_alloc(SIZE_OF_VALUE*(1 << P));
-    bn->mode = DENSE_MODE;
+    
+    int i, bit;
+    uint32_t gn = 0, index = 0, value = 0;
+
+    bit_st *bn = bitv_alloc(SIZE_OF_VALUE*(1 << P), DENSE_MODE);
     bn->nbits = (SIZE_OF_VALUE*(1 << P));
-    int i, value=0, index=0, bit, bitn;
-    bit = P+SIZE_OF_VALUE-1;
-    while(bit < b->nbits){
-        index = 0;
-        value = 0;
-        bitv_readBits(b,&index,&value,bit);
-        bitn = (index*SIZE_OF_VALUE)+SIZE_OF_VALUE-1;
+
+
+    reset_delta();
+    deltaVarIntDecoder(b->words, b->cptW);
+    gn = getNext();
+
+    while (gn != -1) {
+        splitInt(&index,&value, gn);
+        bit = (index*SIZE_OF_VALUE)+SIZE_OF_VALUE-1;
         for (i = 0; i < SIZE_OF_VALUE; i++) {
-            bitv_set(bn, bitn, (value & 1)); 
-            bitn--;
+            bitv_set(bn, bit, (value & 1)); 
+            bit--;
             value >>= 1;
         }
-        bit += P + SIZE_OF_VALUE;
+        gn = getNext();
+        
     }
-
     return bn;
 
 }
@@ -183,24 +192,34 @@ bit_st* bitv_realloc(bit_st* b, int bits) {
     return b;
 }
 
-bit_st* bitv_alloc(int bits) {
+bit_st* bitv_alloc(int bits, int mode) {
     
-    bit_st *b = malloc(sizeof(bit_st));
+    bit_st *b = NULL;
+    b = malloc(sizeof(bit_st));
     if (b == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
+    if (mode == DENSE_MODE) bits = SIZE_OF_VALUE*(1 << P);
     b->nwords = (bits >> 3) + 1;
     b->nbAlloc  = b->nwords*BITS_PER_WORD;
+    b->words = NULL;
     b->words  = calloc(b->nwords, sizeof(b->words));
-    b->nbits = 0;
-    b->cptW = 0;
+    if (b->words == NULL) {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
 
     if (b->words == NULL) {
         perror("calloc");
         exit(EXIT_FAILURE);
     }
+    b->words[0] ='\0';
+    b->mode = mode;
+    if (mode == DENSE_MODE) b->nbits = (SIZE_OF_VALUE*(1 << P));
+    else b->nbits = 0;
+    b->cptW = 0;
 
     memset(b->words, 0, sizeof(b->words) * b->nwords);
 
@@ -287,8 +306,9 @@ void bitv_dump(bit_st *b) {
     if (b == NULL) return;
 
     int bit =0,cpt=0;
+    int i;
 
-    for (int i = 0; i < b->nbits; i++) {
+    for (i = 0; i < b->nbits; i++) {
         if (b->mode == SPARSE_MODE) {
             if (i % 20 == 0 && i != 0) {
                 printf("   ");

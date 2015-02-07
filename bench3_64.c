@@ -33,6 +33,7 @@ int main(int argc, const char **argv) {
     valTab = malloc(HASHED_VALUES*sizeof(uint64_t));
     fileRead = malloc(500*sizeof(char));
     tabEstim = malloc((nbExp*(MAX_CARD/step)+1)*sizeof(float));
+    hyperLL_64bits();
     init();
     strcpy(fileRead,"plot_raw_1000.txt");
 
@@ -53,14 +54,14 @@ int main(int argc, const char **argv) {
                     addItem(valTab[k]);
                 }
             }
-            hyperLL_64bits();
             estim = 0;
+            merge_tabs();
             estim = count_raw();
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }
-	reset();
-        if(i%50==0) printf("i : %d  (estim : %f)\n",i,estim);
+        reset();
+        /*if(i%50==0)*/ printf("i : %d  (estim : %f)\n",i,estim);
     }
     printf("addItem done.\n");
 

@@ -4,12 +4,17 @@
 #include <math.h>
 #include "murmur3.h"
 #include "hypLL64.h"
+#include "bitStruct.h"
+#include "myMap.h"
+#include "deltaVarIntDecoder.h"
+#include "deltaVarIntEncoder.h"
 #include <time.h>
 #include <inttypes.h>
 
 #define FILE_SIZE 1000
 
-uint32_t *M = NULL;
+uint32_t *Mval = NULL;
+uint32_t *Midx = NULL;
 int m;
 double a_m;
 int m_size;
@@ -17,7 +22,9 @@ int* tabCard = NULL;
 float* tabMean = NULL;
 int cpt_file_size;
 int loaded=0;
+int cptM = 0;
 int nbRegist_0 = 0; // number of register equal to 0
+bit_st* bs = NULL;
 
 void loadFile(char* filename){
     tabCard = malloc(FILE_SIZE*sizeof(int));
@@ -35,6 +42,7 @@ void loadFile(char* filename){
     loaded=1;
     fclose(f);
 }
+
 
 
 float extrapol(float* tabX, int* tabY, int size, float observed) {
@@ -57,22 +65,41 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
 }
 
 void init(){
-    m_size = pow(2,P);
-    M = calloc(m_size,sizeof(uint32_t));
-    if (M == NULL) {
+    m_size = (1 << P);
+    Midx = calloc(m_size,sizeof(uint32_t));
+    if (Midx == NULL) {
         perror("calloc");
         exit(EXIT_FAILURE);
     }
+    Mval = calloc(m_size,sizeof(uint32_t));
+    if (Mval == NULL) {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
+    cptM = 0; 
+    bs = bitv_alloc(64, SPARSE_MODE);
+}
+
+void resetSmallTabs(){
+    memset(Midx,0,m_size);
+    memset(Mval,0,m_size);
+    cptM=0;
 }
 
 void reset(){
-  nbRegist_0 = 0;
-  int i;
-  for (i=0; i<m_size; i++) M[i]=0;
+    nbRegist_0 = 0;
+    memset(Midx,0,m_size);
+    memset(Mval,0,m_size);
+    cptM=0;
+    int mode = bs->mode;
+    bitv_free(bs);
+    bs = bitv_alloc(64,mode);
 }
 
 void freeAll(){
-    free(M);
+    bitv_free(bs);
+    free(Mval);
+    free(Midx);
 }
 
 
@@ -90,28 +117,68 @@ void addItem(uint64_t hashVal){
 // Aggregation
     uint64_t idx, w;
     int clz=0;
+    bit_st* tmpbs = bs;
 
     idx = (uint64_t)(hashVal) >> (uint64_t)(64 - P);
     w = lastBits((64-P), hashVal);
     w = (uint64_t)(w) << P;
     clz = __builtin_clz(w)+1;
-    if (M[idx] < clz) {
-        M[idx] = clz;
+    Mval[cptM] = clz;
+    Midx[cptM] = idx;
+    cptM++;
+    if (cptM == SPARSE_LIMIT/4) {
+        bs = NULL;
+        bs = merge(tmpbs,Mval,Midx,cptM);
+        resetSmallTabs();
     }
 }
 
-float count_raw(){
-  float rawEst=0, sumComput=0;
-  int i;
-  
-  for (i = 0; i < m; i++) {
-    sumComput += 1.0/pow(2, M[i]);
-    if (M[i] == 0) nbRegist_0++;
-  }
+void merge_tabs(){
+//    printf("cptM %d\n",cptM);
+    bit_st* tmpbs = bs;
+    bs = NULL;
+    bs = merge(tmpbs, Mval, Midx, cptM);
+    resetSmallTabs();
+}
 
-  sumComput = 1.0/sumComput;
-  rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
-  return rawEst;
+float count_raw(){
+    float rawEst=0, sumComput=0;
+    int i, cpt = 0;
+    nbRegist_0 = 0;
+      
+//      printf("0\n");
+//      printf("0 %d\n",bs->mode);
+    if (bs->mode == DENSE_MODE) {
+        int val;
+        for (i = 0; i < m; i++) {
+            val = bitv_read(bs,i);
+            sumComput += 1.0/(1 << val);
+            if (val == 0) nbRegist_0++;
+        }
+    }else if (bs->mode == SPARSE_MODE){
+        uint32_t gn, idx = 0, val = 0;
+        word_t* bs_w = bs->words;
+        reset_delta();
+        deltaVarIntDecoder(bs->words, bs->cptW);
+        printf("rawcount\n");
+        while((gn = getNext()) != -1){
+            splitInt(&idx, &val, gn);
+            //printf("%d %d\n",idx,val);
+            sumComput += 1.0/(1 << val);
+            cpt++;
+        }
+        printf("cpt %d\n",cpt);
+        bs->words = bs_w;
+        nbRegist_0 = (m-cpt);
+        //printf("cpt : %d\n",cpt);
+        //printf("nbReg %d\n",nbRegist_0);
+        sumComput += (m-cpt);
+    }
+    sumComput = 1.0/sumComput;
+
+
+    rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
+    return rawEst;
 }
 
 float count_file(char* filename){
@@ -157,7 +224,7 @@ float count(){
 
 
 float hyperLL_64bits(void){
-    m = pow(2,P); // m : m = 2**p
+    m = 1 << P; // m : m = 2**p
     switch (P){
         case 4:
             a_m = a_16;

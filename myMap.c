@@ -7,7 +7,9 @@
 #include "bitStruct.h"
 #include "deltaVarIntEncoder.h"
 #include "deltaVarIntDecoder.h"
+#include "sort.h"
 
+int c =0;
 
 void unifTab(uint32_t* Mval, uint32_t* Midx, int* sizeM){
     /* removes all index duplicate in M, and keeps the one with highest value 
@@ -26,7 +28,8 @@ void unifTab(uint32_t* Mval, uint32_t* Midx, int* sizeM){
             }
         }
         Midx[cpt2] = Midx[cpt-1];
-        Mval[cpt2] = Mval[cpt-1];
+        if (max > Mval[cpt-1]) Mval[cpt2] = max; 
+        else Mval[cpt2] = Mval[cpt-1];
         cpt2++;
     }
     *sizeM = cpt2;
@@ -57,51 +60,51 @@ bit_st* merge(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){
     }else{
         bn = merge_dense(b,Mval,Midx,sizeM);
     }
+    bitv_free(b);
     return bn;
 }
 
 bit_st* merge_sparse(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M is already sorted
     //merge b1 and M and returns bn
     int cptM=0;
-    uint32_t gn = 0; // stores all the getNext()
+    uint32_t gnTmp = 0, gn = 0; // stores all the getNext()
     uint32_t gn_idx = 0, gn_val = 0, tmpFus = 0;
-
+    word_t* b_words_init = b->words;
+    bit_st* b_init = b;
     reset_delta();
-    deltaVarIntDecoder(b->words);
+    deltaVarIntDecoder(b->words, b->cptW);
     gn = getNext();
 
-    // il faut trieeerr 
+    quickSort_idx_val(Midx,Mval,0,sizeM-1);
     unifTab(Mval, Midx, &sizeM);
 
 
-    bit_st* bn = bitv_alloc(b->nbAlloc);
-    bn->mode = b->mode;
+    bit_st* bn = NULL;
+    bn = bitv_alloc(b_init->nbAlloc, b_init->mode);
 
-    printf("gn %d\n",gn);
     while (cptM < sizeM && gn != -1){
         splitInt(&gn_idx, &gn_val, gn);
-        printf("gn %d %d \n",gn_idx,gn_val);
-        printf("M %d %d \n",Midx[cptM],Mval[cptM]);
         if (gn_idx < Midx[cptM]) {  
             // first case ------------------------------------------------------------
-            tmpFus = fusionInt(gn_idx, gn_val);
-            appendInt32(tmpFus, bn->words);
-            gn = getNext();
+            appendInt32(gn, bn);
+            gnTmp = gn;
+            while(gn == gnTmp)
+                gn = getNext();
         }else if (gn_idx > Midx[cptM]){
             // second case ------------------------------------------------------------
             tmpFus = fusionInt(Midx[cptM], Mval[cptM]);
-            appendInt32(tmpFus, bn->words);
+            appendInt32(tmpFus, bn);
             cptM++;
         }else if(gn_idx == Midx[cptM]){
+            // third case ------------------------------------------------------------
             if (gn_val >= Mval[cptM]) {
-                tmpFus = fusionInt(gn_idx, gn_val);
-                appendInt32(tmpFus, bn->words);
+                appendInt32(gn, bn);
                 gn = getNext();
                 cptM++;
-            } else if (gn_val < Mval[cptM]){
+            } else {
                 gn = getNext();
                 tmpFus = fusionInt(Midx[cptM], Mval[cptM]);
-                appendInt32(tmpFus, bn->words);
+                appendInt32(tmpFus, bn);
                 cptM++;
             }
         
@@ -112,26 +115,37 @@ bit_st* merge_sparse(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M
         // old list is empty
         while (cptM < sizeM) {
             tmpFus = fusionInt(Midx[cptM], Mval[cptM]);
-            appendInt32(tmpFus, bn->words);
+            appendInt32(tmpFus, bn);
             cptM++;
         }
     }else{
         while (gn != -1) {
-            appendInt32(gn, bn->words);
+            appendInt32(tmpFus, bn);
             gn = getNext();
         }
     }
+    /*printf("cptC %d Wb : %d Wbn %d\n",c,b->cptW,bn->cptW);
+    int i;
+    for (i = 0; i < sizeM; i++) {
+        printf("Mi %d Mv %d\n",Midx[i],Mval[i]);
+    }*/
+    b = b_init;
+    b->words = b_words_init;
+    reset_varintDecoder();
     return bn;
 }
 
 
 bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M is already sorted
-
+    //printf("merge ...\n");
     int bit, cptM = 0;
     int keyB, valB, b_isDone = 0;
-    bit_st* bn = bitv_alloc(b->nbAlloc);
-    bn->mode = b->mode;
+    bit_st* bn = NULL;
+    bn = bitv_alloc(b->nbAlloc, b->mode);
     bit = SIZE_OF_VALUE - 1;
+    
+    quickSort_idx_val(Midx,Mval,0,sizeM-1);
+    unifTab(Mval, Midx, &sizeM);
 
     // First read of valB and Midx[cptM]
     bitv_readBits(b, &keyB, &valB, bit);
@@ -139,6 +153,7 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
     // ------------------------
 
     while (cptM < sizeM && b_isDone == 0){
+        //printf("kb %d\n",b->nbits);
         if (keyB < Midx[cptM]) { 
             // first case ------------------------------------------------------------
             bitv_append(bn, keyB, valB); 
@@ -180,11 +195,12 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
             bitv_append(bn, keyB, valB); 
         }
     }
+    //printf("merge fini\n");
     return bn;
 
 }
 
-
+/*
 int main(int argc, char *argv[]) {
     bit_st *b = bitv_alloc(256);
     b->mode = SPARSE_MODE;
@@ -235,46 +251,42 @@ int main(int argc, char *argv[]) {
     Midx[1] = 3;
     Mval[1] = 16;
     Midx[2] = 5;
-    Mval[2] = 10;
+    Mval[2] = 11;
+    Midx[4] = 5;
+    Mval[4] = 10;
     Midx[3] = 8;
     Mval[3] = 9;
+    int i;//quickSort_idx_val(Midx,Mval,0,4);
     //b = getDense(b);
+    reset_delta();
+    deltaVarIntDecoder(b->words);
+
+    
+    while ((gn = getNext()) != -1) {
+        splitInt(&idx,&val, gn);
+        printf("p%d : %d\n",idx,val);
+    }
+
     printf("read : %d\n",bitv_read(b,7));
-    bit_st* bn = b;
-    bn = merge(b,Mval,Midx,4);
+    bit_st* bn;
+    b = getDense(b);
+    printf("b7 %d\n",bitv_read(b,7));
+
+    bn = merge(b,Mval,Midx,5);
+    printf("coucou\n");
+    for (i = 0; i < 5; i++) {
+        printf("M %d %d \n", Midx[i], Mval[i]);
+    }
     
     reset_delta();
     deltaVarIntDecoder(bn->words);
-    printf("pouet\n");
 
     
     printf("Mode bn : %d , mode b : %d\n",bn->mode,b->mode);
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    //printf("3 : %d\n",bitv_read(bn,3));
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    //printf("4 : %d\n",bitv_read(bn,4));
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    //printf("5 : %d\n",bitv_read(bn,5));
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    gn = getNext();
-    splitInt(&idx,&val, gn);
-    printf("%d : %d\n",idx,val);
-    gn = getNext();
-    splitInt(&idx,&val, gn);
+    while ((gn = getNext()) != -1) {
+        splitInt(&idx,&val, gn);
+        printf("p%d : %d\n",idx,val);
+    }
     printf("%d : %d\n",idx,val);
 
     printf("b5 %d\n",bitv_read(b,5));
@@ -286,7 +298,6 @@ int main(int argc, char *argv[]) {
 
     printf("get dense...\n");
     printf("8 : %d\n",bitv_read(bn,8));
-/*    
     word_t a = 5;
     bitv_write(b,0,8);
     a = a << 29;
@@ -295,12 +306,7 @@ int main(int argc, char *argv[]) {
     printf("a : %d\n",a);
 //    bitv_set(b, 1*20+3);
 //    bitv_set(b, 3);
-    bitv_set(b, 3);
-    bitv_set(b, 5);
-    bitv_set(b, 7);
-    bitv_set(b, 9);
-    bitv_set(b, 32);
-    bitv_free(b);*/
+//    bitv_free(b);
                                     
     return 0;
-}
+}*/

@@ -1,7 +1,8 @@
 #ifndef DEF_DELTAVARINT_ENCODER
 #define DEF_DELTAVARINT_ENCODER
 
-void appendInt32(int value, char* map);
+void appendInt32(int value, bit_st* b);
+void appendInt32_prev(int value, char* map);
 int string_size();
 void reset_string();
 uint8_t* concat(uint8_t* old, uint8_t* new);

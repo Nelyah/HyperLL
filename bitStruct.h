@@ -4,7 +4,7 @@
 
 
 bit_st* bitv_realloc(bit_st* b, int bits);
-bit_st* bitv_alloc(int bits);
+bit_st* bitv_alloc(int bits, int mode);
 void bitv_append(bit_st *b, int index, int value);
 void bitv_free(bit_st *b);
 int bitv_get(bit_st *b, int bit);
