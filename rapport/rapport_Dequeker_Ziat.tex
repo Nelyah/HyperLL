@@ -36,7 +36,24 @@ very badly as the size of the data stream grows.
 \section{HyperLogLog}
 
 \section{HyperLogLog++}
-
+\subsection{transition to 64 bits}
+\subsection{Bias estimation and correction}
+\subsection{Memory optimization}
+\subsubsection{Sparse representation}
+\subsubsection{Dense representation}
+\subsubsection{Varint encoding}
+Since the temporary set used in the sparse representation is merged
+with the list before it gets too large, it's not very relevant to
+perform a compression on it. However, having no such a size limit for
+the sorted list, we'll try to reduce its memory usage playing on two
+points:
+\begin{itemize}
+\item Using fixed-size integers as it is common practice in many
+  langages may here result in a waste of memory space.
+\item Since the manipulated list is sorted, we can take advantage of
+  this information.
+\end{itemize}
+\subsubsection{varint encoding}
 \section{Conclusion}
 
 
