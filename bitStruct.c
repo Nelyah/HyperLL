@@ -90,6 +90,8 @@ bit_st* getDense(bit_st* b){
         gn = getNext();
         
     }
+    bitv_free(b);
+    printf("coucou\n");
     return bn;
 
 }

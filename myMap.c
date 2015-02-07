@@ -124,11 +124,6 @@ bit_st* merge_sparse(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M
             gn = getNext();
         }
     }
-    /*printf("cptC %d Wb : %d Wbn %d\n",c,b->cptW,bn->cptW);
-    int i;
-    for (i = 0; i < sizeM; i++) {
-        printf("Mi %d Mv %d\n",Midx[i],Mval[i]);
-    }*/
     b = b_init;
     b->words = b_words_init;
     reset_varintDecoder();
@@ -137,7 +132,6 @@ bit_st* merge_sparse(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M
 
 
 bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M is already sorted
-    //printf("merge ...\n");
     int bit, cptM = 0;
     int keyB, valB, b_isDone = 0;
     bit_st* bn = NULL;
@@ -153,7 +147,6 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
     // ------------------------
 
     while (cptM < sizeM && b_isDone == 0){
-        //printf("kb %d\n",b->nbits);
         if (keyB < Midx[cptM]) { 
             // first case ------------------------------------------------------------
             bitv_append(bn, keyB, valB); 
@@ -195,7 +188,6 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
             bitv_append(bn, keyB, valB); 
         }
     }
-    //printf("merge fini\n");
     return bn;
 
 }

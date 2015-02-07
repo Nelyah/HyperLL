@@ -131,10 +131,14 @@ void addItem(uint64_t hashVal){
         bs = merge(tmpbs,Mval,Midx,cptM);
         resetSmallTabs();
     }
+    if (bs->mode != DENSE_MODE && bytesUsed(bs) > (((1 << P)*6)/8)) { // number of bytes used by a dense compression
+        tmpbs = bs;
+        bs = NULL;
+        bs = getDense(tmpbs);
+    }
 }
 
 void merge_tabs(){
-//    printf("cptM %d\n",cptM);
     bit_st* tmpbs = bs;
     bs = NULL;
     bs = merge(tmpbs, Mval, Midx, cptM);
@@ -146,8 +150,6 @@ float count_raw(){
     int i, cpt = 0;
     nbRegist_0 = 0;
       
-//      printf("0\n");
-//      printf("0 %d\n",bs->mode);
     if (bs->mode == DENSE_MODE) {
         int val;
         for (i = 0; i < m; i++) {
@@ -160,18 +162,13 @@ float count_raw(){
         word_t* bs_w = bs->words;
         reset_delta();
         deltaVarIntDecoder(bs->words, bs->cptW);
-        printf("rawcount\n");
         while((gn = getNext()) != -1){
             splitInt(&idx, &val, gn);
-            //printf("%d %d\n",idx,val);
             sumComput += 1.0/(1 << val);
             cpt++;
         }
-        printf("cpt %d\n",cpt);
         bs->words = bs_w;
         nbRegist_0 = (m-cpt);
-        //printf("cpt : %d\n",cpt);
-        //printf("nbReg %d\n",nbRegist_0);
         sumComput += (m-cpt);
     }
     sumComput = 1.0/sumComput;
