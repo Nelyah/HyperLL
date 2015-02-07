@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usepackage{color}
+
+
+\title{HyperLogLog: Analysis and implementation of an improved algorithm}
+\author{Dequeker Chloé, Ziat Ghiles}
+\date{February 2015}
+
+\begin{document}
+
+\maketitle
+\clearpage
+
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+
+\section{cardinality estimation problem}
+Finding the number of distinct elements in a data set with duplicates
+is a well-known problem which is applies in many fields.
+
+The naive solution to this problem is to examine for each element of
+the data stream its belonging to a data structure $\mathcal{D}$. If
+$\mathcal{D}$ doesn't contain the element we add it to the data
+structure. At the end of the process, the cardinality of the data
+stream is equal to the size of $\mathcal{D}$.
+
+This solution gives the exact answer but it easy to see that is scales
+very badly as the size of the data stream grows.
+
+\section{HyperLogLog}
+
+\section{HyperLogLog++}
+
+\section{Conclusion}
+
+
+\end{document}
