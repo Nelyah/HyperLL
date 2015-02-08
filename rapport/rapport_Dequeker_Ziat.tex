@@ -39,6 +39,16 @@ bases of the studied alogorithm.
 \section{LinearCounting and HyperLogLog}
 \subsection{LinearCounting}
 \subsection{HyperLogLog}
+The approach of the HyperLogLog algorithm to approximate the
+cardinalities of a multiset is completely different. It is based on
+randomization using a hash function for each element of the
+multiset. It then focuses on the maximum of the number of leading
+zeros in each hash values. it is legitimate to expect that the more
+items there will be, the more this value will be high.
+To improve the precision of this calculation, HyperLogLog uses the
+stochastic averaging technique: Doing so, it splits the stream in
+$m$ substreams, and perform the computation separately on each.
+
 \section{HyperLogLog++}
 
 \subsection{transition to 64 bits}
