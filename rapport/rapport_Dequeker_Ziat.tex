@@ -22,38 +22,46 @@
 
 \section{cardinality estimation problem}
 Finding the number of distinct elements in a data set with duplicates
-is a well-known problem which is applies in many fields.
+is a well-known problem which applies in many fields.
 
 The naive solution to this problem is to examine for each element of
 the data stream its belonging to a data structure $\mathcal{D}$. If
-$\mathcal{D}$ doesn't contain the element we add it to the data
+$\mathcal{D}$ does not contain the element we add it to the data
 structure. At the end of the process, the cardinality of the data
 stream is equal to the size of $\mathcal{D}$.
 
-This solution gives the exact answer but it easy to see that is scales
-very badly as the size of the data stream grows.
+This solution gives the exact answer but it is easy to see that it
+scales very badly as the size of the data stream grows.
 
-\section{HyperLogLog}
-
+In order to resolve this problem, several alogorithms have been
+proposed. These include LinearCounting and HyperLogLog which are the two
+bases of the studied alogorithm.
+\section{LinearCounting and HyperLogLog}
+\subsection{LinearCounting}
+\subsection{HyperLogLog}
 \section{HyperLogLog++}
+
 \subsection{transition to 64 bits}
+
 \subsection{Bias estimation and correction}
+For a given configuration of the algorithm, the observed bias
+is dependant on the cardinality estimated. From this observation, we
+implement a correction method. 
 \subsection{Memory optimization}
 \subsubsection{Sparse representation}
 \subsubsection{Dense representation}
 \subsubsection{Varint encoding}
 Since the temporary set used in the sparse representation is merged
-with the list before it gets too large, it's not very relevant to
-perform a compression on it. However, having no such a size limit for
-the sorted list, we'll try to reduce its memory usage playing on two
-points:
+with the list before it gets too large, performing a compression on it
+is not as interesting then on the sorted list. We'll try to reduce the
+memory usage of it by playing on two points:
 \begin{itemize}
 \item Using fixed-size integers as it is common practice in many
   langages may here result in a waste of memory space.
 \item Since the manipulated list is sorted, we can take advantage of
   this information.
 \end{itemize}
-\subsubsection{varint encoding}
+
 \section{Conclusion}
 
 
