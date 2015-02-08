@@ -4,6 +4,7 @@
 \usepackage{multicol}
 \usepackage{amsmath}
 \usepackage{color}
+\usepackage{graphicx}
 
 
 \title{HyperLogLog: Analysis and implementation of an improved algorithm}
@@ -70,13 +71,28 @@ The result is then subjected to corrections:
 Using a 32-bits hash function restricts the area of efficiency of the
 algorithm to the sets with less then $2^{32}$ distincts elements.
 That's why an proposed improvement is to use a 64-bits hash function.
-It does not significatively change the memory cost (the memory cost is
+It does not significatively change the memory cost (it is
  onlys increased only by 1 bit per substream).
 
 \subsection{Bias estimation and correction}
 For a given configuration of the algorithm, the observed bias is only
 dependant on the cardinality estimated. From this observation, we
-implement a correction method.
+implement a correction method: As shown in figure 1, the raw
+estimation of HLL is distorted for small cardinalities. In order to
+correct this error, we take measures of it for cardinalities between 0
+and 100 000 (with a step of 500) and we store them into a file. From
+now, the file will be loaded at the begining of the calculation. A
+correction may then be calculated for the result using a linear
+interpolation between the values registered and the raw estimations.
+
+\begin{center}
+\begin{figure}[h]
+\includegraphics[scale=0.7]{img02.png}
+\caption{Cardinality estimation for the corrected HLL}
+\end{figure}
+\end{center}
+
+
 \subsection{Memory optimization}
 \subsubsection{Sparse representation}
 \subsubsection{Dense representation}
