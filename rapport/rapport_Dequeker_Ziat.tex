@@ -19,8 +19,13 @@
 \clearpage
 
 \section{Introduction}
+In this paper, we present our implementation and analysis of a
+caridnality esmation algorithm proposed by Stefan Heule, Marc
+Nunkesser and Alexander Hall: \texttt{HyperLogLog++}. This algorithm
+is itself an improvement of the \texttt{HyperLogLog} algorithm
+proposed by Flajolet et. al.
 
-\section{cardinality estimation problem}
+\subsection{cardinality estimation problem}
 Finding the number of distinct elements in a data set with duplicates
 is a well-known problem which applies in many fields.
 
@@ -44,19 +49,34 @@ cardinalities of a multiset is completely different. It is based on
 randomization using a hash function for each element of the
 multiset. It then focuses on the maximum of the number of leading
 zeros in each hash values. it is legitimate to expect that the more
-items there will be, the more this value will be high.
-To improve the precision of this calculation, HyperLogLog uses the
-stochastic averaging technique: Doing so, it splits the stream in
-$m$ substreams, and perform the computation separately on each.
+items there will be, the more this value will be high.  To improve the
+precision of this calculation, HyperLogLog uses the stochastic
+averaging technique: Doing so, it splits the stream in $m$ substreams,
+and perform the computation separately on each.
+
+The result is then subjected to corrections:
+\begin{itemize}
+\item \emph{Small range correction :} As shown by simulation, for a
+  cardinality smaller than $\frac{5}{2}$ of the number of substreams, non-linear
+  distortions appear. For that range, LinearCounting is used.
+\item \emph{Large range correction :} Due to the use of a 32 bit hash
+  function, when the cardinality goes to $2^{32}$, the chances of hash
+  collisions increases.
+\end{itemize}
 
 \section{HyperLogLog++}
 
 \subsection{transition to 64 bits}
+Using a 32-bits hash function restricts the area of efficiency of the
+algorithm to the sets with less then $2^{32}$ distincts elements.
+That's why an proposed improvement is to use a 64-bits hash function.
+It does not significatively change the memory cost (the memory cost is
+ onlys increased only by 1 bit per substream).
 
 \subsection{Bias estimation and correction}
-For a given configuration of the algorithm, the observed bias
-is dependant on the cardinality estimated. From this observation, we
-implement a correction method. 
+For a given configuration of the algorithm, the observed bias is only
+dependant on the cardinality estimated. From this observation, we
+implement a correction method.
 \subsection{Memory optimization}
 \subsubsection{Sparse representation}
 \subsubsection{Dense representation}
@@ -72,7 +92,7 @@ memory usage of it by playing on two points:
   this information.
 \end{itemize}
 
-\section{Conclusion}
 
+\section{Conclusion}
 
 \end{document}
