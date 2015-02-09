@@ -83,7 +83,7 @@ void init(){
         exit(EXIT_FAILURE);
     }
     cptM = 0; 
-    bs = bitv_alloc(64, SPARSE_MODE);
+    bs = bitv_alloc(15, SPARSE_MODE);
 }
 
 void resetSmallTabs(){
@@ -138,7 +138,7 @@ void addItem(uint64_t hashVal){
         bs = merge(tmpbs,Mval,Midx,cptM);
         resetSmallTabs();
     }
-    if (bs->mode != DENSE_MODE && bytesUsed(bs) > (((1 << P)*6)/8)) { // number of bytes used by a dense compression
+    if (bs->mode != DENSE_MODE && bytesAlloc(bs) > (((1 << P)*6)/8)) { // number of bytes used by a dense compression
         tmpbs = bs;
         bs = NULL;
         bs = getDense(tmpbs);

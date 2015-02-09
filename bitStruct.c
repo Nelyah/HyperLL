@@ -218,8 +218,7 @@ bit_st* bitv_alloc(int bits, int mode) {
     }
     b->words[0] ='\0';
     b->mode = mode;
-    if (mode == DENSE_MODE) b->nbits = (SIZE_OF_VALUE*(1 << P));
-    else b->nbits = 0;
+    b->nbits = 0;
     b->cptW = 0;
 
     memset(b->words, 0, sizeof(b->words) * b->nwords);
@@ -296,6 +295,11 @@ void updateMax(bit_st* b, int index, int value){
     }
 }
 
+int bytesAlloc(bit_st* b){
+    int val = b->nbAlloc/8;
+    if (b->nbAlloc % 8 != 0) val++;
+    return val;
+}
 
 int bytesUsed(bit_st *b) {
     int val = b->nbits/8;

@@ -12,6 +12,7 @@ int bitv_read(bit_st *b, int index);
 void bitv_set(bit_st *b, int bit, int val);
 void bitv_write(bit_st *b, int index, int value);
 int bytesUsed(bit_st *b);
+int bytesAlloc(bit_st* b);
 void updateMax(bit_st* b, int index, int value);
 void bitv_readBits(bit_st* b, int *index, int *value, int bit);
 void bitv_dump(bit_st *b);
