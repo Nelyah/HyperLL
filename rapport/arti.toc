@@ -8,7 +8,7 @@
 \contentsline {subsection}{\numberline {3.2}Bias estimation and correction}{4}
 \contentsline {subsection}{\numberline {3.3}Memory optimization}{5}
 \contentsline {subsubsection}{\numberline {3.3.1}Sparse representation}{6}
-\contentsline {subsubsection}{\numberline {3.3.2}Dense representation}{6}
-\contentsline {subsubsection}{\numberline {3.3.3}Varint encoding}{7}
-\contentsline {section}{\numberline {4}Evaluation of all improvements}{8}
-\contentsline {section}{\numberline {5}Conclusion}{8}
+\contentsline {subsubsection}{\numberline {3.3.2}Dense representation}{7}
+\contentsline {subsubsection}{\numberline {3.3.3}Varint encoding}{8}
+\contentsline {section}{\numberline {4}Evaluation of all improvements}{9}
+\contentsline {section}{\numberline {5}Conclusion}{9}

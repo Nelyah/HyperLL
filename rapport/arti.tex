@@ -9,7 +9,7 @@
 
 
 \title{HyperLogLog: Analysis and implementation of an improved algorithm}
-\author{Dequeker ChloÃ©, Ziat Ghiles}
+\author{Dequeker Chlo\'e, Ziat Ghiles}
 \date{February 2015}
 
 \begin{document}
@@ -121,6 +121,20 @@ bit version. The result is that the number of leading 0 will need 6 bits at most
 values is then of $6+P = 20$ bits. We will show in the next sections the different kinds of compression we used 
 during the implementation and in the final state of the algorithm.
 
+In this figure we observe the memory usage of the program. We can see at first the map size increasing quickly, 
+due to the fact that a lot of indexes in the map are empty. As we will show below, the sparse representation allows
+ us to keep a small memory size. As soon as get past the limit of the dense representation, we switch to it and 
+ therefore keep a constant memory size, as well as a constant number of bits used. Each time the size of the map
+ in the sparse representation becomes greater than the number of bits allocated, we double the size of the allocated memory, resulting around the cardinality 12500 with a peak of memory. Nevertheless we rapidly decrease the size of our structure by switching to the dense mode (which is of constant size).\\
+ 
+ 
+\begin{center}
+\begin{figure}[h]
+\includegraphics[scale=0.7]{plot_memoryUsage.png}
+\caption{Cardinality estimation for the corrected HLL}
+\end{figure}
+\end{center}
+
 \subsubsection{Sparse representation}
 This is the first type of compression, and is the one which should be used when only a low number
 of index have been hashed. This representation works by pairs (index, number of leading zero (clz)).
@@ -130,8 +144,7 @@ the value of clz. The total size (for P = 14) of the bitmap will then be the num
 times 20 bits. We can then easily see why this representation is particularly efficient for a low number of 
 indexes and this is it's strong perk. On the other hand, the more the number of different indexes grow, the less 
 efficient this representation becomes. \\ 
-We will then introduce the Dense representation, which becomes more efficient when the number of index reaches a 
-certain value we will be talking about in the next section. \\
+We will then introduce the Dense representation, which becomes more efficient when the number of indexes reaches certain value we will be talking about in the next section. \\
 
 \begin{center}
 \begin{figure}[h]
@@ -198,7 +211,7 @@ is sorted), the stored values are smaller and require less memory space with the
 
 \section{Conclusion}
 
-In this section since this is mainly our personal point of view on the work we've done, we chose to do two separate section for each of us. The first of will be written by Chloé and the second one by Ghiles.
+In this section since this is mainly our personal point of view on the work we've done, we chose to do two separate section for each of us. The first of will be written by Chlo\'e and the second one by Ghiles.
 
  In conclusion, I though the class was great in general. Some point could be improved though. I find it weird that
  the two sub-part of the class are so divided, since we are still working on the same subject. My point is that the 

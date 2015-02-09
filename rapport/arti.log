@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.1.31)  9 FEB 2015 16:46
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.1.31)  9 FEB 2015 23:11
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -515,59 +515,73 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
  [4
 
 ]
-<img02.png, id=25, 481.8pt x 361.35pt>
+<img02.png, id=24, 481.8pt x 361.35pt>
 File: img02.png Graphic file (type png)
  <use img02.png>
 Package pdftex.def Info: img02.png used on input line 108.
 (pdftex.def)             Requested size: 337.25769pt x 252.94327pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 125--135
+Underfull \hbox (badness 10000) in paragraph at lines 124--129
 
  []
 
-[5 <./img02.png>] <sparse.png, id=31, 374.198pt x 112.42pt>
-File: sparse.png Graphic file (type png)
- <use sparse.png>
-Package pdftex.def Info: sparse.png used on input line 138.
-(pdftex.def)             Requested size: 187.09854pt x 56.20985pt.
+[5 <./img02.png>] <plot_memoryUsage.png, id=30, 481.8pt x 361.35pt>
+File: plot_memoryUsage.png Graphic file (type png)
 
-[6 <./sparse.png>] <dense.png, id=37, 366.971pt x 114.026pt>
+<use plot_memoryUsage.png>
+Package pdftex.def Info: plot_memoryUsage.png used on input line 133.
+(pdftex.def)             Requested size: 337.25769pt x 252.94327pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 139--148
+
+ []
+
+[6 <./plot_memoryUsage.png>] <sparse.png, id=36, 374.198pt x 112.42pt>
+File: sparse.png Graphic file (type png)
+
+<use sparse.png>
+Package pdftex.def Info: sparse.png used on input line 151.
+(pdftex.def)             Requested size: 187.09854pt x 56.20985pt.
+ <dense.png, id=38, 366.971pt x 114.026pt>
 File: dense.png Graphic file (type png)
  <use dense.png>
-Package pdftex.def Info: dense.png used on input line 161.
+Package pdftex.def Info: dense.png used on input line 174.
 (pdftex.def)             Requested size: 183.48505pt x 57.01285pt.
 
-<img03.png, id=38, 642.4pt x 481.8pt>
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[7 <./sparse.png>] <img03.png, id=44, 642.4pt x 481.8pt>
 File: img03.png Graphic file (type png)
  <use img03.png>
-Package pdftex.def Info: img03.png used on input line 191.
+Package pdftex.def Info: img03.png used on input line 204.
 (pdftex.def)             Requested size: 321.19922pt x 240.8994pt.
- [7 <./dense.png>]
-[8 <./img03.png>] [9] (./arti.aux) ) 
+
+[8 <./dense.png>] [9 <./img03.png>] [10] (./arti.aux) ) 
 Here is how much of TeX's memory you used:
- 3847 strings out of 493117
- 52485 string characters out of 6135433
+ 3852 strings out of 493117
+ 52604 string characters out of 6135433
  121182 words of memory out of 5000000
- 7251 multiletter control sequences out of 15000+600000
+ 7255 multiletter control sequences out of 15000+600000
  9537 words of font info for 35 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 38i,7n,32p,267b,278s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2014/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2014/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmr12.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/publ
-ic/amsfonts/cm/cmr17.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public
-/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/am
-sfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmti10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsf
-onts/cm/cmtt10.pfb>
-Output written on arti.pdf (9 pages, 174051 bytes).
+ 38i,7n,32p,318b,278s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2014
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2014/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2014/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2014/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2014/texmf-di
+st/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2014/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fon
+ts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2014/texmf-dist/font
+s/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on arti.pdf (10 pages, 176507 bytes).
 PDF statistics:
- 87 PDF objects out of 1000 (max. 8388607)
- 56 compressed objects within 1 object stream
+ 92 PDF objects out of 1000 (max. 8388607)
+ 58 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 26 words of extra memory for PDF output out of 10000 (max. 10000000)
 
