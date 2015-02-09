@@ -15,6 +15,7 @@
 
 uint32_t *Mval = NULL;
 uint32_t *Midx = NULL;
+uint32_t *M = NULL;
 int m;
 double a_m;
 int m_size;
@@ -66,6 +67,11 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
 
 void init(){
     m_size = (1 << P);
+    M = calloc(m_size,sizeof(uint32_t));
+    if (M== NULL) {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
     Midx = calloc(m_size,sizeof(uint32_t));
     if (Midx == NULL) {
         perror("calloc");
@@ -125,6 +131,7 @@ void addItem(uint64_t hashVal){
     clz = __builtin_clz(w)+1;
     Mval[cptM] = clz;
     Midx[cptM] = idx;
+    if (M[idx] < clz) M[idx] = clz;
     cptM++;
     if (cptM == SPARSE_LIMIT/4) {
         bs = NULL;
@@ -211,10 +218,10 @@ float count(){
         }else{
             estim = rawEst;
        }
-    }else if (rawEst <= ((1.0/30.0) * pow(2,64))) {
+    }else if (rawEst <= ((1.0/30.0) * ((uint64_t)1 << 32))) {
         estim = rawEst;
     }else{
-        estim = -pow(2,64)*log(1 - (rawEst/pow(2,64)));
+        estim = (-1)*((uint64_t)1 << 32)*log(1 - (rawEst/((uint64_t)1 << 32)));
     }
     return estim;
 }

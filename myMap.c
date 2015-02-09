@@ -137,7 +137,6 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
     bit_st* bn = NULL;
     bn = bitv_alloc(b->nbAlloc, b->mode);
     bit = SIZE_OF_VALUE - 1;
-    
     quickSort_idx_val(Midx,Mval,0,sizeM-1);
     unifTab(Mval, Midx, &sizeM);
 
@@ -156,7 +155,7 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
                 bitv_readBits(b, &keyB, &valB, bit);
                 bit += SIZE_OF_VALUE;
             }
-        }else if (Midx[cptM] > keyB){
+        }else if (Midx[cptM] < keyB){
             // second case ------------------------------------------------------------
             bitv_append(bn, Midx[cptM], Mval[cptM]);
             cptM++;
@@ -180,7 +179,7 @@ bit_st* merge_dense(bit_st* b, uint32_t* Mval, uint32_t* Midx, int sizeM){ // M 
             cptM++;
         }
 
-    }else if (b_isDone == 1){
+    }else if (cptM >= sizeM){
         bitv_append(bn, keyB, valB); 
         while (bit < b->nbits){
             bitv_readBits(b, &keyB, &valB, bit);

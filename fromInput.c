@@ -3,6 +3,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include "fromInput.h"
+#include "hypLL64.h"
 #include "murmur3.h"
 
 
@@ -29,6 +30,7 @@ int main(int argc, const char **argv) {
         MurmurHash3_x64_128(buffer, strlen(buffer), HASH_SEED, hashVal);
         addItem(hashVal[0]);
     }
+    merge_tabs();
     float estim = count();
     printf("%f\n",estim);
     free(buffer);
