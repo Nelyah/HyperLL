@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+/* File containing all sorting functions. The use of the quicksort one
+ * can be explain by it's relatively low complexity O(n log(n))
+ * The reason behind the quicksort and quicksort_idx_val is because we need
+ * to sort the second tab accordingly to the first one. Two tabs need then to 
+ * be given in parameters
+ */
+
+
 int partition(float* tab, int first, int last, int pivot){
     float tmp;
 

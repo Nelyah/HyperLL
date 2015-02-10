@@ -88,15 +88,3 @@ uint32_t decode2(uint8_t* encoded, int *len){
   return res;
 }
 
-/*
-int main(int argc, char *argv[]) {
-  uint32_t a = 981245893;
-  uint8_t* varint;
-  varint = encode(a);
-  print(varint);
-  uint32_t normal;
-  normal = decode (varint);
-  printf("valeur décodée: %"SCNu32"\n", normal);
-  return 0;
-}
-*/

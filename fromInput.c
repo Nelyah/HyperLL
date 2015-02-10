@@ -14,6 +14,7 @@
 char *buffer = NULL;
 
 int main(int argc, const char **argv) {
+/* Fonction main qui permet de lire depuis l'entrée standard */
     
     uint64_t hashVal[4]; // Only hashVal[0] will be used for a 64bit return value
 

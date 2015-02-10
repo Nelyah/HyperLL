@@ -56,7 +56,8 @@ int main(int argc, const char **argv) {
             }
             estim = 0;
             merge_tabs();
-            estim = count_raw();
+            estim = count_raw(); // Count raw here, change to count() for a 
+                                    // better estimation
             tabEstim[i+(j/step)*nbExp] = estim;
             idx+=step;
         }

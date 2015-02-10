@@ -16,7 +16,11 @@
 
 
 int main(int argc, const char **argv) {
-    //hyperLL_32bits();
+/* This function is the main used to perform the 
+ * relative error calcul. One should give 2 parameters when 
+ * running it : The step as the first argument, and the number
+ * of experiments as the second.
+ */
     int step = atoi(argv[1]);
     int nbExp = atoi(argv[2]);
     uint64_t hashVal[4];

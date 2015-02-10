@@ -13,6 +13,8 @@ int len=0;
 int prevdecoded=0;
 
 void deltaVarIntDecoder(uint8_t* b, int size){
+/* init the general variable
+ */
   encoded = NULL;
   encoded = b;
   idx=0;
@@ -40,6 +42,8 @@ uint32_t getNext_noDelta(){
 }
 
 uint32_t getNext(){
+/* Returns the next value 
+ */
   uint32_t res;
   int cpt=0;
   if (encoded != NULL && idx<len){

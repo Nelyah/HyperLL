@@ -20,15 +20,7 @@ char* concat(char* old, char*new){
     strcat(old, new);
     return old;
 }
-/*
-void appendInt32_nonDelta(int value){
-  assert( value >= 0 );
-  char* encoded;
-  uint32_t v = (uint32_t) value;
-  uint8_t* tab8 = encode(v);
-  encoded =(char*) tab8;
-  concat(encoded);
-}*/
+
 
 void appendInt32_char(int value, char* map){
   assert( (uint32_t)value >= 0 );
@@ -40,7 +32,6 @@ void appendInt32_char(int value, char* map){
   bs_tmp->cptW += s;
   bs_tmp->nbits += s*8;
   free(encoded);
-//  strcat(map,encoded);
 
 }
 

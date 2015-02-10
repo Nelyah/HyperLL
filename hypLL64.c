@@ -16,18 +16,21 @@
 uint32_t *Mval = NULL;
 uint32_t *Midx = NULL;
 uint32_t *M = NULL;
+int ccc = 0;
 int m;
 double a_m;
 int m_size;
 int* tabCard = NULL;
 float* tabMean = NULL;
 int cpt_file_size;
-int loaded=0;
-int cptM = 0;
+int loaded=0; // if we're doing the count_file function, check if file is loaded
+int cptM = 0; // the number of items we added since the last merge 
 int nbRegist_0 = 0; // number of register equal to 0
 bit_st* bs = NULL;
 
 void loadFile(char* filename){
+/* Will read through the file in order to have a better approximation 
+ */
     tabCard = malloc(FILE_SIZE*sizeof(int));
     tabMean = malloc(FILE_SIZE*sizeof(float));
     int card;
@@ -47,6 +50,8 @@ void loadFile(char* filename){
 
 
 float extrapol(float* tabX, int* tabY, int size, float observed) {
+/* Used in the count_file, to be able to perform the extrapolation of values
+ */
     int i=0;
     while (i < size && tabX[i] < observed) {
         i++;
@@ -66,6 +71,10 @@ float extrapol(float* tabX, int* tabY, int size, float observed) {
 }
 
 void init(){
+/* init function, sets all tabs to m_size size, and value to 0
+ * The bit structure is in sparse mode at first, since it is best 
+ * in terms of memory usage
+ */
     m_size = (1 << P);
     M = calloc(m_size,sizeof(uint32_t));
     if (M== NULL) {
@@ -122,6 +131,7 @@ uint64_t lastBits(int n, uint64_t val){
 void addItem(uint64_t hashVal){
 // Aggregation
     uint64_t idx, w;
+    ccc++;
     int clz=0;
     bit_st* tmpbs = bs;
 
@@ -133,12 +143,14 @@ void addItem(uint64_t hashVal){
     Midx[cptM] = idx;
     if (M[idx] < clz) M[idx] = clz;
     cptM++;
-    if (cptM == SPARSE_LIMIT/4) {
+    if (cptM == SPARSE_LIMIT/4) { 
+    // The moment we choose to do the merge
         bs = NULL;
         bs = merge(tmpbs,Mval,Midx,cptM);
         resetSmallTabs();
     }
     if (bs->mode != DENSE_MODE && bytesAlloc(bs) > (((1 << P)*6)/8)) { // number of bytes used by a dense compression
+    // if is it best to use the dense mode in terms of memory usage
         tmpbs = bs;
         bs = NULL;
         bs = getDense(tmpbs);
@@ -179,6 +191,7 @@ float count_raw(){
         sumComput += (m-cpt);
     }
     sumComput = 1.0/sumComput;
+
 
 
     rawEst = a_m * (uint64_t)(m)*(uint64_t)(m) * sumComput;
@@ -228,6 +241,7 @@ float count(){
 
 
 float hyperLL_64bits(void){
+// choose the appropriate a_m in function of P
     m = 1 << P; // m : m = 2**p
     switch (P){
         case 4:
