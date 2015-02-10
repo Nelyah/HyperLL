@@ -54,7 +54,7 @@ then we will detail our implementation, from the data structure used
 to the differences we may have with the original article. Then we will
 show the results of some benchmark we made in order to establish how
 well the algorithm was functionning. In another section we will
-explain how we made our implementation, and which language did we use.
+explain how we made our implementation.
 
 \clearpage
 \section{LinearCounting and HyperLogLog}
@@ -64,7 +64,7 @@ Linear counting is an old algorithm originated from an article in
 1990. The algorithm was at first mainly used in database application,
 other application not being as used as now. This algorithm focuses on
 using the number of empty indexes to determine an estimation of the
-cardinality. The estimation can be stated as follows : $E = -m\times
+cardinality. The estimation can be stated as follow : $E = -m\times
 log(V)$ where V is the proportion of empty indexes in our hashmap and
 m is the size of the map (here with the precision indice $P=14$ we
 have $m=2^{14}$).  We use this algorithm instead of the main one when
@@ -157,7 +157,7 @@ size).\\
 \begin{center}
 \begin{figure}[h]
 \includegraphics[scale=0.7]{plot_memoryUsage.png}
-\caption{Cardinality estimation for the corrected HLL}
+\caption{Memory usage and number of used bytes by the bitmap}
 \end{figure}
 \end{center}
 
