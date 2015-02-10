@@ -94,16 +94,54 @@ interpolation between the values registered and the raw estimations.
 
 
 \subsection{Memory optimization}
-Memory usage is an important factor in order to have a efficient algorithm. In this algorithm, we can see that the size of the different values we are using don't need to be of the standard size of an int (which would be 4 bytes for a 32 bits integer). We need in fact to keep two size of values, the first one being the index which maximum value is $2^{P}$ with P the precision factor. That means any index could be stocked on 14 bits. The second value is the number of leading 0 of the hashed value which can't be over $64-P$ bits since we work on a 64 bit version. The result is that the number of leading 0 will need 6 bits at most. The total size of those two values is then of $6+P = 20$ bits. We will show in the next sections the different kinds of compression we used during the implementation and in the final state of the algorithm.
+Memory usage is an important factor in order to have a efficient
+algorithm. In this algorithm, we can see that the size of the
+different values we are using don't need to be of the standard size of
+an int (which would be 4 bytes for a 32 bits integer). We need in fact
+to keep two size of values, the first one being the index which
+maximum value is $2^{P}$ with P the precision factor. That means any
+index could be stocked on 14 bits. The second value is the number of
+leading 0 of the hashed value which can't be over $64-P$ bits since we
+work on a 64 bit version. The result is that the number of leading 0
+will need 6 bits at most. The total size of those two values is then
+of $6+P = 20$ bits. We will show in the next sections the different
+kinds of compression we used during the implementation and in the
+final state of the algorithm.
 
 \subsubsection{Sparse representation}
-This is the first type of compression, and is the one which should be used when only a low number of index have been hashed. This representation works by pairs (index, number of leading zero (clz)). For a  better understanding consider a bitmap, then separate it by 20 bits blocks. Each of these block will be a pair (index, value). The first P bits of the pair will represent the value of the index, and the next 6 bits the value of clz. The total size (for P = 14) of the bitmap will then be the number of different index hashed times 20 bits. We can then easily see why this representation is particularly efficient for a low number of indexes and this is it's strong perk. On the other hand, the more the number of different indexes grow, the less efficient this representation becomes. \\ 
-We will then introduce the Dense representation, which becomes more efficient when the number of index reaches a certain value we will be talking about in the next section. 
+This is the first type of compression, and is the one which should be
+used when only a low number of index have been hashed. This
+representation works by pairs (index, number of leading zero
+(clz)). For a better understanding consider a bitmap, then separate it
+by 20 bits blocks. Each of these block will be a pair (index,
+value). The first P bits of the pair will represent the value of the
+index, and the next 6 bits the value of clz. The total size (for P =
+14) of the bitmap will then be the number of different index hashed
+times 20 bits. We can then easily see why this representation is
+particularly efficient for a low number of indexes and this is it's
+strong perk. On the other hand, the more the number of different
+indexes grow, the less efficient this representation becomes. \\ We
+will then introduce the Dense representation, which becomes more
+efficient when the number of index reaches a certain value we will be
+talking about in the next section.
 
 \subsubsection{Dense representation}
-We will introduce in this section the second type of compression. As we said earlier this representation if more efficient with a high number of indexes. This picture this representation, we need here to divid the bitmap by 6bits blocks. In this representation, when we go through the first 6 bits of the bitmap, we will read the value of index 0. The next 6 bits after that will be the value of index 1 and so on. This representation allows us to represent the pair (index,value) without writing the index. We can easily see this bitmap will be of constant size since the value of the index is deducted from the position of the 6-bit block in the bitmap. \\
-Considering those two representation, it is clear we need to start the algorithm using the sparse representation, and then switch at some point to the dense one. The limit where we want to switch from one to another is when the sparse representation take more memory than the dense one. In the implementation, it is then important to keep track of the bitmap's size and switch to the dense representation whenever it is necessary.
-
+We will introduce in this section the second type of compression. As
+we said earlier this representation if more efficient with a high
+number of indexes. This picture this representation, we need here to
+divid the bitmap by 6bits blocks. In this representation, when we go
+through the first 6 bits of the bitmap, we will read the value of
+index 0. The next 6 bits after that will be the value of index 1 and
+so on. This representation allows us to represent the pair
+(index,value) without writing the index. We can easily see this bitmap
+will be of constant size since the value of the index is deducted from
+the position of the 6-bit block in the bitmap. \\ Considering those
+two representation, it is clear we need to start the algorithm using
+the sparse representation, and then switch at some point to the dense
+one. The limit where we want to switch from one to another is when the
+sparse representation take more memory than the dense one. In the
+implementation, it is then important to keep track of the bitmap's
+size and switch to the dense representation whenever it is necessary.
 
 \subsubsection{Varint encoding}
 Since the temporary set used in the sparse representation is merged
