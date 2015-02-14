@@ -13,7 +13,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{textcomp}
-\usepackage{multicol}
+%\usepackage{multicol}
 \definecolor{darkgreen}{rgb}{0, 0.6, 0}
 
 \usetikzlibrary{arrows}
@@ -44,23 +44,6 @@
   \end{beamercolorbox}}%
   \vskip0pt%
 }
-
-\lstset{language = caml, frameround = fttt}
-
-\lstset{upquote=true,
-        columns=flexible,
-        keepspaces=true,
-        breaklines,
-        breakindent=0pt,
-        basicstyle=\tiny,
-        breaklines=true,
-        keywordstyle=\color{red},
-        commentstyle=\color{darkgreen},
-        tabsize=2,
-        escapeinside={;;}{¤},
-        escapebegin=;;\endgraf\color{gray},
-        morekeywords={super, module, struct, sig, functor, val},
-        }
 
 
 \begin{document}
@@ -199,15 +182,14 @@
   \begin{itemize}
     \item We implemented it
     \pause
-    \item Entirely
+    \item Entirely (Except for P=25)
     \pause
-    \item Using \textbf{C} (best langage ever)
+    \item Using \textbf{C} (best language ever)
     \pause
-    \item \textbf{C99} would have been better (second best langage ever)
+    \item \textbf{C99} would have been better 
     \pause
     \item It works!
     \pause 
-    \item Et voila
   \end{itemize}
 \end{frame}
 
